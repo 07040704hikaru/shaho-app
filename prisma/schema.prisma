@@ -1,0 +1,517 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  NOT_APPLICABLE
+}
+
+enum EmploymentType {
+  REGULAR
+  CONTRACT
+  PART_TIME
+  TEMPORARY
+  EXECUTIVE
+}
+
+enum SocialInsuranceClassification {
+  REGULAR
+  SHORT_TIME
+  PART_TIME
+  COVERED_EXEMPT
+}
+
+enum PensionCategory {
+  CATEGORY_I
+  CATEGORY_II
+  CATEGORY_III
+}
+
+enum InsuranceType {
+  HEALTH
+  PENSION
+  NURSING
+  EMPLOYMENT
+  WORKERS
+}
+
+enum InsuranceEnrollmentStatus {
+  ENROLLED
+  TERMINATED
+  ADJUSTED
+}
+
+enum WithholdingType {
+  BASIC
+  HEAD_OF_HOUSEHOLD
+  DAILY_EMPLOYEE
+  NON_RESIDENT
+}
+
+enum ResidentTaxMethod {
+  SPECIAL_COLLECTION
+  ORDINARY_COLLECTION
+  NONE
+}
+
+enum IncomeTaxTableType {
+  MONTHLY
+  DAILY
+  BONUS
+}
+
+enum PayrollItemCategory {
+  EARNING
+  ALLOWANCE
+  DEDUCTION
+  SOCIAL_INSURANCE
+  TAX
+  BONUS
+  ADJUSTMENT
+}
+
+enum PayrollRunType {
+  REGULAR
+  BONUS
+  ADJUSTMENT
+}
+
+enum PayrollRunStatus {
+  DRAFT
+  APPROVED
+  LOCKED
+}
+
+enum PayrollChangeType {
+  MONTHLY_VARIATION
+  STANDARD_REMUNERATION_RECALC
+  TAX_PROFILE_UPDATE
+  PAYROLL_RECALCULATION
+  RATE_TABLE_UPDATE
+}
+
+enum AllowanceFrequency {
+  MONTHLY
+  PER_PAY_RUN
+  ANNUAL
+}
+
+model Company {
+  id               Int               @id @default(autoincrement())
+  name             String
+  kanaName         String?
+  corporateNumber  String?           @unique
+  postalCode       String?
+  address          String?
+  phone            String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  employees        Employee[]
+  offices          Office[]
+  payrollRuns      PayrollRun[]
+  reportQueueItems ReportQueueItem[]
+}
+
+model Office {
+  id           Int        @id @default(autoincrement())
+  company      Company    @relation(fields: [companyId], references: [id])
+  companyId    Int
+  name         String
+  officeNumber String?
+  postalCode   String?
+  address      String?
+  phone        String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  employees    Employee[]
+
+  @@index([companyId])
+}
+
+model Employee {
+  id                          Int                           @id @default(autoincrement())
+  uuid                        String                        @unique @default(uuid())
+  company                     Company                       @relation(fields: [companyId], references: [id])
+  companyId                   Int
+  office                      Office?                       @relation(fields: [officeId], references: [id])
+  officeId                    Int?
+  employeeCode                String                        @unique
+  lastName                    String
+  firstName                   String
+  lastNameKana                String?
+  firstNameKana               String?
+  displayName                 String?
+  dateOfBirth                 DateTime
+  gender                      Gender?
+  hireDate                    DateTime
+  terminationDate             DateTime?
+  employmentType              EmploymentType
+  email                       String?
+  phone                       String?
+  postalCode                  String?
+  address                     String?
+  createdAt                   DateTime                      @default(now())
+  updatedAt                   DateTime                      @updatedAt
+  socialInsuranceProfile      EmployeeSocialInsurance?
+  taxProfile                  EmployeeTaxProfile?
+  myNumber                    EmployeeMyNumber?
+  dependents                  Dependent[]
+  insuranceHistories          InsuranceEnrollmentHistory[]
+  taxHistories                TaxWithholdingHistory[]
+  payrollCalculations         PayrollCalculation[]
+  allowances                  EmployeeAllowance[]
+  deductions                  EmployeeDeduction[]
+  changeLogs                  PayrollChangeLog[]
+  residentTaxNotices          ResidentTaxNotice[]
+  bonusPayments               BonusPayment[] // ← 追加
+  MonthlyRemunerationSnapshot MonthlyRemunerationSnapshot[]
+
+  @@index([companyId])
+  @@index([officeId])
+}
+
+model EmployeeSocialInsurance {
+  id                            Int                           @id @default(autoincrement())
+  employee                      Employee                      @relation(fields: [employeeId], references: [id])
+  employeeId                    Int                           @unique
+  insuredClassification         SocialInsuranceClassification
+  pensionCategory               PensionCategory?
+  standardMonthlyRemuneration   Decimal?                      @db.Decimal(10, 2)
+  standardBonusAmount           Decimal?                      @db.Decimal(10, 2)
+  healthInsuranceGrade          Int?
+  nursingCareApplicable         Boolean                       @default(false)
+  employmentInsuranceApplicable Boolean                       @default(true)
+  workersCompensationClass      String?
+  effectiveFrom                 DateTime
+  effectiveTo                   DateTime?
+  updatedAt                     DateTime                      @updatedAt
+}
+
+model EmployeeTaxProfile {
+  id                 Int               @id @default(autoincrement())
+  employee           Employee          @relation(fields: [employeeId], references: [id])
+  employeeId         Int               @unique
+  withholdingType    WithholdingType
+  dependentsCount    Int               @default(0)
+  hasSpouseExemption Boolean           @default(false)
+  disabilityType     String?
+  widowWidower       Boolean           @default(false)
+  singleParent       Boolean           @default(false)
+  residentTaxMethod  ResidentTaxMethod @default(SPECIAL_COLLECTION)
+  memo               String?
+  effectiveFrom      DateTime
+  effectiveTo        DateTime?
+  updatedAt          DateTime          @updatedAt
+}
+
+model EmployeeMyNumber {
+  id             Int      @id @default(autoincrement())
+  employee       Employee @relation(fields: [employeeId], references: [id])
+  employeeId     Int      @unique
+  encryptedValue String
+  lastFourDigits String?
+  note           String?
+  updatedAt      DateTime @updatedAt
+}
+
+model Dependent {
+  id                         Int       @id @default(autoincrement())
+  employee                   Employee  @relation(fields: [employeeId], references: [id])
+  employeeId                 Int
+  name                       String
+  nameKana                   String?
+  relationship               String
+  dateOfBirth                DateTime
+  isSocialInsuranceDependent Boolean   @default(false)
+  isTaxDependent             Boolean   @default(false)
+  livesTogether              Boolean?
+  startDate                  DateTime
+  endDate                    DateTime?
+  memo                       String?
+  createdAt                  DateTime  @default(now())
+  updatedAt                  DateTime  @updatedAt
+
+  @@index([employeeId])
+}
+
+model InsuranceRate {
+  id               Int           @id @default(autoincrement())
+  insuranceType    InsuranceType
+  grade            Int?
+  regionCode       String?
+  businessCategory String?
+  thresholdLow     Decimal?      @db.Decimal(12, 2)
+  thresholdHigh    Decimal?      @db.Decimal(12, 2)
+  employeeRate     Decimal       @db.Decimal(10, 6)
+  employerRate     Decimal       @db.Decimal(10, 6)
+  effectiveFrom    DateTime
+  effectiveTo      DateTime?
+  notes            String?
+
+  @@index([insuranceType, effectiveFrom])
+  @@index([insuranceType, grade])
+}
+
+model IncomeTaxBracket {
+  id            Int                @id @default(autoincrement())
+  tableType     IncomeTaxTableType
+  dependents    Int                @default(0)
+  lowerBound    Int
+  upperBound    Int?
+  taxAmount     Int
+  deduction     Int                @default(0)
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+
+  @@index([tableType, dependents, lowerBound])
+}
+
+model PayrollItemDefinition {
+  id                            Int                 @id @default(autoincrement())
+  code                          String              @unique
+  name                          String
+  category                      PayrollItemCategory
+  taxable                       Boolean             @default(true)
+  socialInsuranceApplicable     Boolean             @default(true)
+  employmentInsuranceApplicable Boolean             @default(false)
+  residentTaxApplicable         Boolean             @default(true)
+  description                   String?
+  createdAt                     DateTime            @default(now())
+  updatedAt                     DateTime            @updatedAt
+  allowances                    EmployeeAllowance[]
+  deductions                    EmployeeDeduction[]
+  payrollComponents             PayrollComponent[]
+}
+
+model EmployeeAllowance {
+  id                      Int                   @id @default(autoincrement())
+  employee                Employee              @relation(fields: [employeeId], references: [id])
+  employeeId              Int
+  item                    PayrollItemDefinition @relation(fields: [itemId], references: [id])
+  itemId                  Int
+  amount                  Decimal               @db.Decimal(12, 2)
+  frequency               AllowanceFrequency    @default(MONTHLY)
+  taxableOverride         Boolean?
+  socialInsuranceOverride Boolean?
+  startDate               DateTime
+  endDate                 DateTime?
+  createdAt               DateTime              @default(now())
+  updatedAt               DateTime              @updatedAt
+
+  @@index([employeeId])
+  @@index([itemId])
+}
+
+model EmployeeDeduction {
+  id         Int                   @id @default(autoincrement())
+  employee   Employee              @relation(fields: [employeeId], references: [id])
+  employeeId Int
+  item       PayrollItemDefinition @relation(fields: [itemId], references: [id])
+  itemId     Int
+  amount     Decimal               @db.Decimal(12, 2)
+  startDate  DateTime
+  endDate    DateTime?
+  createdAt  DateTime              @default(now())
+  updatedAt  DateTime              @updatedAt
+
+  @@index([employeeId])
+  @@index([itemId])
+}
+
+model PayrollRun {
+  id                    Int                     @id @default(autoincrement())
+  company               Company                 @relation(fields: [companyId], references: [id])
+  companyId             Int
+  payDate               DateTime
+  periodStart           DateTime
+  periodEnd             DateTime
+  runType               PayrollRunType          @default(REGULAR)
+  status                PayrollRunStatus        @default(DRAFT)
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  calculations          PayrollCalculation[]
+  TaxWithholdingHistory TaxWithholdingHistory[]
+  PayrollChangeLog      PayrollChangeLog[]
+  BonusPayment          BonusPayment[]
+
+  @@index([companyId])
+  @@index([payDate])
+}
+
+model PayrollCalculation {
+  id                   Int                @id @default(autoincrement())
+  payrollRun           PayrollRun?        @relation(fields: [payrollRunId], references: [id])
+  payrollRunId         Int?
+  employee             Employee           @relation(fields: [employeeId], references: [id])
+  employeeId           Int
+  baseSalary           Decimal            @db.Decimal(12, 2)
+  grossPay             Decimal            @db.Decimal(12, 2)
+  netPay               Decimal            @db.Decimal(12, 2)
+  taxableIncome        Decimal            @db.Decimal(12, 2)
+  socialInsuranceTotal Decimal            @db.Decimal(12, 2)
+  taxTotal             Decimal            @db.Decimal(12, 2)
+  residentTax          Decimal            @default(0) @db.Decimal(12, 2)
+  employmentInsurance  Decimal            @default(0) @db.Decimal(12, 2)
+  workersCompensation  Decimal            @default(0) @db.Decimal(12, 2)
+  nursingCare          Decimal            @default(0) @db.Decimal(12, 2)
+  adjustmentNotes      String?
+  resultJson           Json?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  components           PayrollComponent[]
+
+  @@index([employeeId])
+  @@index([payrollRunId])
+}
+
+model PayrollComponent {
+  id              Int                    @id @default(autoincrement())
+  calculation     PayrollCalculation     @relation(fields: [calculationId], references: [id])
+  calculationId   Int
+  item            PayrollItemDefinition? @relation(fields: [itemId], references: [id])
+  itemId          Int?
+  code            String
+  name            String
+  category        PayrollItemCategory
+  amount          Decimal                @db.Decimal(12, 2)
+  employerPortion Decimal                @default(0) @db.Decimal(12, 2)
+  metadata        Json?
+
+  @@index([calculationId])
+  @@index([itemId])
+}
+
+model InsuranceEnrollmentHistory {
+  id                   Int                       @id @default(autoincrement())
+  employee             Employee                  @relation(fields: [employeeId], references: [id])
+  employeeId           Int
+  insuranceType        InsuranceType
+  status               InsuranceEnrollmentStatus
+  effectiveDate        DateTime
+  standardRemuneration Decimal?                  @db.Decimal(12, 2)
+  remarks              String?
+  createdAt            DateTime                  @default(now())
+
+  @@index([employeeId, insuranceType, effectiveDate])
+}
+
+model TaxWithholdingHistory {
+  id            Int                @id @default(autoincrement())
+  employee      Employee           @relation(fields: [employeeId], references: [id])
+  employeeId    Int
+  tableType     IncomeTaxTableType
+  dependents    Int
+  taxableIncome Decimal            @db.Decimal(12, 2)
+  taxWithheld   Decimal            @db.Decimal(12, 2)
+  effectiveDate DateTime
+  payrollRun    PayrollRun?        @relation(fields: [payrollRunId], references: [id])
+  payrollRunId  Int?
+  createdAt     DateTime           @default(now())
+
+  @@index([employeeId, effectiveDate])
+}
+
+model PayrollChangeLog {
+  id            Int               @id @default(autoincrement())
+  employee      Employee          @relation(fields: [employeeId], references: [id])
+  employeeId    Int
+  payrollRun    PayrollRun?       @relation(fields: [payrollRunId], references: [id])
+  payrollRunId  Int?
+  changeType    PayrollChangeType
+  description   String
+  effectiveDate DateTime
+  metadata      Json?
+  createdAt     DateTime          @default(now())
+
+  @@index([employeeId, effectiveDate])
+}
+
+model MonthlyRemunerationSnapshot {
+  id                          Int      @id @default(autoincrement())
+  employee                    Employee @relation(fields: [employeeId], references: [id])
+  employeeId                  Int
+  year                        Int
+  month                       Int
+  totalDays                   Int
+  totalHours                  Decimal  @db.Decimal(10, 2)
+  baseSalary                  Decimal  @db.Decimal(12, 2)
+  allowanceTotal              Decimal  @db.Decimal(12, 2)
+  overtimeTotal               Decimal  @db.Decimal(12, 2)
+  taxableIncome               Decimal  @db.Decimal(12, 2)
+  socialInsuranceTotal        Decimal  @db.Decimal(12, 2)
+  standardMonthlyRemuneration Decimal? @db.Decimal(12, 2)
+  createdAt                   DateTime @default(now())
+
+  @@unique([employeeId, year, month])
+  @@index([employeeId, year, month])
+}
+
+model BonusPayment {
+  id                  Int         @id @default(autoincrement())
+  payrollRun          PayrollRun? @relation(fields: [payrollRunId], references: [id])
+  payrollRunId        Int?
+  employee            Employee    @relation(fields: [employeeId], references: [id])
+  employeeId          Int
+  amount              Decimal     @db.Decimal(12, 2)
+  taxableAmount       Decimal     @db.Decimal(12, 2)
+  socialInsuranceRate Decimal     @db.Decimal(10, 6)
+  withholdingRate     Decimal     @db.Decimal(10, 6)
+  calculatedTax       Decimal     @db.Decimal(12, 2)
+  calculatedInsurance Decimal     @db.Decimal(12, 2)
+  paymentDate         DateTime
+  createdAt           DateTime    @default(now())
+
+  @@index([employeeId])
+}
+
+model ReportQueueItem {
+  id           Int       @id @default(autoincrement())
+  company      Company   @relation(fields: [companyId], references: [id])
+  companyId    Int
+  reportType   String
+  payload      Json
+  status       String    @default("PENDING")
+  requestedAt  DateTime  @default(now())
+  processedAt  DateTime?
+  errorMessage String?
+}
+
+model ResidentTaxNotice {
+  id               Int                     @id @default(autoincrement())
+  employee         Employee                @relation(fields: [employeeId], references: [id])
+  employeeId       Int
+  fiscalYear       Int
+  startMonth       Int // Typically June (6)
+  annualTax        Decimal                 @db.Decimal(12, 2)
+  bonusWithholding Decimal?                @db.Decimal(12, 2)
+  remarks          String?
+  createdAt        DateTime                @default(now())
+  allocations      ResidentTaxAllocation[]
+
+  @@unique([employeeId, fiscalYear])
+  @@index([employeeId])
+}
+
+model ResidentTaxAllocation {
+  id          Int               @id @default(autoincrement())
+  notice      ResidentTaxNotice @relation(fields: [noticeId], references: [id])
+  noticeId    Int
+  month       Int
+  year        Int
+  baseAmount  Decimal           @db.Decimal(12, 2)
+  bonusAmount Decimal?          @db.Decimal(12, 2)
+  payRunType  PayrollRunType    @default(REGULAR)
+  createdAt   DateTime          @default(now())
+  paidAt      DateTime?
+
+  @@unique([noticeId, year, month, payRunType])
+  @@index([noticeId])
+}
