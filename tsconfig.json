@@ -28,6 +28,15 @@
       ],
       "@/types/*": [
         "src/types/*"
+      ],
+      "@/domain/*": [
+        "src/domain/*"
+      ],
+      "@/application/*": [
+        "src/application/*"
+      ],
+      "@/infrastructure/*": [
+        "src/infrastructure/*"
       ]
     },
     "plugins": [

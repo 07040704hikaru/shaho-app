@@ -1,7 +1,5 @@
 import { prisma } from '@/lib/prisma';
 import {
-  Employee,
-  EmployeeTaxProfile,
   IncomeTaxBracket,
   IncomeTaxTableType,
   ResidentTaxMethod,
@@ -9,9 +7,15 @@ import {
 
 import type { IncomeTaxLookupCriteria } from '@/types/payroll';
 
+export type TaxProfileSnapshot = {
+  employeeId: number;
+  dependentsCount: number;
+  residentTaxMethod: ResidentTaxMethod;
+};
+
 type TaxCalculationContext = {
   payrollDate: Date;
-  employee: Employee & { taxProfile?: EmployeeTaxProfile | null };
+  taxProfile?: TaxProfileSnapshot | null;
   taxableIncome: number;
   bonusAmount?: number;
 };
@@ -34,36 +38,35 @@ async function findIncomeTaxBracket({
 
 export async function calculateIncomeTax({
   payrollDate,
-  employee,
+  taxProfile,
   taxableIncome,
   bonusAmount,
 }: TaxCalculationContext): Promise<{ incomeTax: number; residentTax: number }> {
-  const profile = employee.taxProfile;
-  if (!profile) {
+  if (!taxProfile) {
     return { incomeTax: 0, residentTax: 0 };
   }
 
-  const dependents = profile.dependentsCount;
-  const tableType = bonusAmount && bonusAmount > 0 ? IncomeTaxTableType.BONUS : IncomeTaxTableType.MONTHLY;
+  const dependents = taxProfile.dependentsCount;
+  const tableType: IncomeTaxTableType = bonusAmount && bonusAmount > 0 ? IncomeTaxTableType.BONUS : IncomeTaxTableType.MONTHLY;
 
   const applicableIncome = bonusAmount && bonusAmount > 0 ? bonusAmount : taxableIncome;
 
   const bracket = await findIncomeTaxBracket({
-    tableType,
+    tableType: tableType as IncomeTaxTableType,
     dependents,
     taxableIncome: applicableIncome,
   });
 
   const incomeTax = bracket ? Math.max(0, Number(bracket.taxAmount) - Number(bracket.deduction)) : 0;
 
-  const residentTax = await calculateResidentTax(payrollDate, profile, taxableIncome);
+  const residentTax = await calculateResidentTax(payrollDate, taxProfile, taxableIncome);
 
   return { incomeTax, residentTax };
 }
 
 async function calculateResidentTax(
   payrollDate: Date,
-  profile: EmployeeTaxProfile,
+  profile: TaxProfileSnapshot,
   taxableIncome: number,
 ): Promise<number> {
   if (profile.residentTaxMethod !== ResidentTaxMethod.SPECIAL_COLLECTION) {

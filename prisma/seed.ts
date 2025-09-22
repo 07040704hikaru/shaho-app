@@ -121,7 +121,7 @@ async function main() {
       employerRate: new Prisma.Decimal(0.0025),
       effectiveFrom: new Date('2024-04-01'),
     },
-  ];
+  ] satisfies Prisma.InsuranceRateCreateManyInput[];
 
   await prisma.insuranceRate.createMany({ data: insuranceRates });
 
@@ -162,7 +162,7 @@ async function main() {
       deduction: 0,
       effectiveFrom: new Date('2023-01-01'),
     },
-  ];
+  ] satisfies Prisma.IncomeTaxBracketCreateManyInput[];
 
   await prisma.incomeTaxBracket.createMany({ data: taxBrackets });
 

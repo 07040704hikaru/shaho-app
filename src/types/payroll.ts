@@ -1,6 +1,11 @@
-export type PayrollItemCategory = string;
+import type {
+  IncomeTaxTableType as PrismaIncomeTaxTableType,
+  PayrollItemCategory as PrismaPayrollItemCategory,
+} from '@prisma/client';
 
-export type IncomeTaxTableType = string;
+export type PayrollItemCategory = PrismaPayrollItemCategory;
+
+export type IncomeTaxTableType = PrismaIncomeTaxTableType;
 
 export type AllowanceFrequency = 'ONE_TIME' | 'DAILY' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'YEARLY';
 

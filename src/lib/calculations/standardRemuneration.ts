@@ -81,12 +81,16 @@ async function resolveHealthInsuranceGrade(
       insuranceType: InsuranceType.HEALTH,
       effectiveFrom: { lte: referenceDate },
       OR: [{ effectiveTo: null }, { effectiveTo: { gte: referenceDate } }],
-      OR: [
-        { thresholdLow: null },
+      AND: [
         {
-          AND: [
-            { thresholdLow: { lte: remuneration } },
-            { OR: [{ thresholdHigh: null }, { thresholdHigh: { gte: remuneration } }] },
+          OR: [
+            { thresholdLow: null },
+            {
+              AND: [
+                { thresholdLow: { lte: remuneration } },
+                { OR: [{ thresholdHigh: null }, { thresholdHigh: { gte: remuneration } }] },
+              ],
+            },
           ],
         },
       ],

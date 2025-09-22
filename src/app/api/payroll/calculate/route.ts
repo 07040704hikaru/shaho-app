@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
-import { calculatePayroll } from '@/lib/calculations/payroll';
+import { RunPayrollUseCase } from '@/application/payroll/RunPayrollUseCase';
+import { PayrollCalculator } from '@/domain/payroll/PayrollCalculator';
+import { PrismaPayrollCalculationGateway } from '@/infrastructure/prisma/payroll/PrismaPayrollCalculationGateway';
+import { PrismaSocialInsuranceCalculator } from '@/infrastructure/prisma/socialInsurance/PrismaSocialInsuranceCalculator';
+import { PrismaTaxCalculator } from '@/infrastructure/prisma/tax/PrismaTaxCalculator';
 
 const requestSchema = z.object({
   employeeId: z.number().int().positive(),
@@ -36,7 +40,25 @@ export async function POST(request: Request) {
     const json = await request.json();
     const payload = requestSchema.parse(json);
 
-    const result = await calculatePayroll(payload);
+    const gateway = new PrismaPayrollCalculationGateway();
+    const payrollCalculator = new PayrollCalculator(
+      new PrismaSocialInsuranceCalculator(),
+      new PrismaTaxCalculator(),
+    );
+    const runPayrollUseCase = new RunPayrollUseCase(gateway, payrollCalculator);
+
+    const result = await runPayrollUseCase.execute({
+      employeeId: payload.employeeId,
+      payrollDate: new Date(payload.payrollDate),
+      periodStart: new Date(payload.periodStart),
+      periodEnd: new Date(payload.periodEnd),
+      baseSalary: payload.baseSalary,
+      overtimeHours: payload.overtimeHours,
+      overtimeRate: payload.overtimeRate,
+      allowances: payload.allowances,
+      deductions: payload.deductions,
+      bonusAmount: payload.bonusAmount,
+    });
 
     return NextResponse.json({
       ok: true,

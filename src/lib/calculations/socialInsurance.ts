@@ -1,16 +1,19 @@
 import { prisma } from '@/lib/prisma';
-import {
-  Employee,
-  EmployeeSocialInsurance,
-  InsuranceRate,
-  InsuranceType,
-} from '@prisma/client';
+import { InsuranceRate, InsuranceType } from '@prisma/client';
 
 import type { InsuranceComponent } from '@/types/payroll';
 
+export type SocialInsuranceProfileSnapshot = {
+  standardMonthlyRemuneration?: number | null;
+  healthInsuranceGrade?: number | null;
+  nursingCareApplicable?: boolean | null;
+  employmentInsuranceApplicable?: boolean | null;
+  workersCompensationClass?: string | null;
+};
+
 type SocialInsuranceContext = {
   payrollDate: Date;
-  employee: Employee & { socialInsuranceProfile?: EmployeeSocialInsurance | null };
+  profile?: SocialInsuranceProfileSnapshot | null;
   standardMonthlyRemuneration?: number;
   bonusAmount?: number;
 };
@@ -62,12 +65,10 @@ async function resolveInsuranceRate(
 
 export async function calculateSocialInsurance({
   payrollDate,
-  employee,
+  profile,
   standardMonthlyRemuneration,
   bonusAmount,
 }: SocialInsuranceContext): Promise<InsuranceComponent[]> {
-  const profile = employee.socialInsuranceProfile;
-
   if (!profile) {
     return [];
   }
