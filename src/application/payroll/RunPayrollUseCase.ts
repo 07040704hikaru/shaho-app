@@ -1,4 +1,4 @@
-import { PayrollItemCategory, ResidentTaxMethod, WithholdingType } from '@prisma/client';
+import { PayrollItemCategory, PayrollSalaryType, ResidentTaxMethod, WithholdingType } from '@prisma/client';
 
 import { PayrollCalculator } from '@/domain/payroll/PayrollCalculator';
 import type {
@@ -13,7 +13,7 @@ export type RunPayrollCommand = {
   payrollDate: Date;
   periodStart: Date;
   periodEnd: Date;
-  baseSalary: number;
+  baseSalary?: number;
   overtimeHours?: number;
   overtimeRate?: number;
   allowances?: AllowanceInput[];
@@ -35,6 +35,15 @@ export type EmployeeRecord = {
     dependentsCount: number;
     residentTaxMethod: ResidentTaxMethod;
     withholdingType: WithholdingType;
+  } | null;
+  payrollMaster?: {
+    salaryType: PayrollSalaryType;
+    baseSalary: number;
+    overtimeDivisor?: number | null;
+    overtimeMultiplier?: number | null;
+    socialInsuranceProfileId?: number | null;
+    taxProfileId?: number | null;
+    residentTaxNoticeId?: number | null;
   } | null;
 };
 
@@ -118,12 +127,22 @@ export class RunPayrollUseCase {
 
     const employeeSnapshot = this.toEmployeeSnapshot(employeeRecord);
 
+    const baseSalary = command.baseSalary ?? employeeRecord.payrollMaster?.baseSalary;
+    if (baseSalary == null) {
+      throw new Error('Base salary is missing. Configure payroll master or provide an override.');
+    }
+
+    const overtimeDivisor = employeeRecord.payrollMaster?.overtimeDivisor ?? undefined;
+    const overtimeMultiplier = employeeRecord.payrollMaster?.overtimeMultiplier ?? undefined;
+
     return this.calculator.calculate({
       employee: employeeSnapshot,
       payrollDate,
-      baseSalary: command.baseSalary,
+      baseSalary,
       overtimeHours: command.overtimeHours,
       overtimeRate: command.overtimeRate,
+      overtimeDivisor,
+      overtimeMultiplier,
       allowances,
       deductions,
       bonusAmount: command.bonusAmount,
@@ -178,6 +197,15 @@ export class RunPayrollUseCase {
         dependentsCount: record.taxProfile.dependentsCount,
         residentTaxMethod: record.taxProfile.residentTaxMethod,
         withholdingType: record.taxProfile.withholdingType,
+      };
+    }
+
+    if (record.payrollMaster) {
+      snapshot.payrollMaster = {
+        salaryType: record.payrollMaster.salaryType,
+        baseSalary: record.payrollMaster.baseSalary,
+        overtimeDivisor: record.payrollMaster.overtimeDivisor ?? null,
+        overtimeMultiplier: record.payrollMaster.overtimeMultiplier ?? null,
       };
     }
 

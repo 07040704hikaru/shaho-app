@@ -12,7 +12,7 @@ const requestSchema = z.object({
   payrollDate: z.string().datetime({ offset: true }),
   periodStart: z.string().datetime({ offset: true }),
   periodEnd: z.string().datetime({ offset: true }),
-  baseSalary: z.number().min(0),
+  baseSalary: z.number().min(0).optional(),
   overtimeHours: z.number().min(0).optional(),
   overtimeRate: z.number().min(0).optional(),
   allowances: z

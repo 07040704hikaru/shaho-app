@@ -90,6 +90,12 @@ enum PayrollRunStatus {
   LOCKED
 }
 
+enum PayrollSalaryType {
+  MONTHLY
+  HOURLY
+  DAILY
+}
+
 enum PayrollChangeType {
   MONTHLY_VARIATION
   STANDARD_REMUNERATION_RECALC
@@ -162,6 +168,7 @@ model Employee {
   updatedAt                   DateTime                      @updatedAt
   socialInsuranceProfile      EmployeeSocialInsurance?
   taxProfile                  EmployeeTaxProfile?
+  payrollMaster               EmployeePayrollMaster?
   myNumber                    EmployeeMyNumber?
   dependents                  Dependent[]
   insuranceHistories          InsuranceEnrollmentHistory[]
@@ -193,6 +200,7 @@ model EmployeeSocialInsurance {
   effectiveFrom                 DateTime
   effectiveTo                   DateTime?
   updatedAt                     DateTime                      @updatedAt
+  payrollMaster                 EmployeePayrollMaster?        @relation("PayrollMasterSocialInsurance")
 }
 
 model EmployeeTaxProfile {
@@ -210,6 +218,26 @@ model EmployeeTaxProfile {
   effectiveFrom      DateTime
   effectiveTo        DateTime?
   updatedAt          DateTime          @updatedAt
+  payrollMaster      EmployeePayrollMaster? @relation("PayrollMasterTaxProfile")
+}
+
+model EmployeePayrollMaster {
+  id                       Int                    @id @default(autoincrement())
+  employee                 Employee               @relation(fields: [employeeId], references: [id])
+  employeeId               Int                    @unique
+  salaryType               PayrollSalaryType      @default(MONTHLY)
+  baseSalary               Decimal                @db.Decimal(12, 2)
+  overtimeDivisor          Int?
+  overtimeMultiplier       Decimal?               @db.Decimal(5, 2)
+  socialInsuranceProfileId Int? @unique
+  taxProfileId             Int? @unique
+  residentTaxNoticeId      Int? @unique
+  createdAt                DateTime               @default(now())
+  updatedAt                DateTime               @updatedAt
+
+  socialInsuranceProfile EmployeeSocialInsurance? @relation("PayrollMasterSocialInsurance", fields: [socialInsuranceProfileId], references: [id])
+  taxProfile             EmployeeTaxProfile?      @relation("PayrollMasterTaxProfile", fields: [taxProfileId], references: [id])
+  residentTaxNotice      ResidentTaxNotice?       @relation("PayrollMasterResidentTax", fields: [residentTaxNoticeId], references: [id])
 }
 
 model EmployeeMyNumber {
@@ -495,6 +523,7 @@ model ResidentTaxNotice {
   remarks          String?
   createdAt        DateTime                @default(now())
   allocations      ResidentTaxAllocation[]
+  payrollMaster    EmployeePayrollMaster?  @relation("PayrollMasterResidentTax")
 
   @@unique([employeeId, fiscalYear])
   @@index([employeeId])

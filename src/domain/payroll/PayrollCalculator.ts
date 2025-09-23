@@ -11,17 +11,25 @@ import type {
 } from './types';
 
 const DEFAULT_OVERTIME_BASE_DIVISOR = 160;
+const DEFAULT_OVERTIME_MULTIPLIER = 1.25;
 
 function resolveOvertimePay({
   baseSalary,
   overtimeHours,
   overtimeRate,
-}: Pick<PayrollCalculationContext, 'baseSalary' | 'overtimeHours' | 'overtimeRate'>): number {
+  overtimeDivisor,
+  overtimeMultiplier,
+}: Pick<
+  PayrollCalculationContext,
+  'baseSalary' | 'overtimeHours' | 'overtimeRate' | 'overtimeDivisor' | 'overtimeMultiplier'
+>): number {
   const hours = overtimeHours ?? 0;
   if (!hours) return 0;
 
-  const rate =
-    overtimeRate ?? ((baseSalary / DEFAULT_OVERTIME_BASE_DIVISOR) * 1.25);
+  const divisor = overtimeDivisor ?? DEFAULT_OVERTIME_BASE_DIVISOR;
+  const multiplier = overtimeMultiplier ?? DEFAULT_OVERTIME_MULTIPLIER;
+
+  const rate = overtimeRate ?? (divisor > 0 ? (baseSalary / divisor) * multiplier : 0);
   return Number((hours * rate).toFixed(2));
 }
 

@@ -244,6 +244,10 @@ async function main() {
         ],
       },
     },
+    include: {
+      socialInsuranceProfile: true,
+      taxProfile: true,
+    },
   });
 
   const commuteItemId = await getItemId('COMMUTE_ALLOWANCE');
@@ -333,6 +337,18 @@ async function main() {
       annualTax: new Prisma.Decimal(96000),
       bonusWithholding: new Prisma.Decimal(20000),
       remarks: 'サンプルデータ',
+    },
+  });
+
+  await prisma.employeePayrollMaster.create({
+    data: {
+      employeeId: employee.id,
+      baseSalary: new Prisma.Decimal(300000),
+      overtimeDivisor: 160,
+      overtimeMultiplier: new Prisma.Decimal(1.25),
+      socialInsuranceProfileId: employee.socialInsuranceProfile?.id,
+      taxProfileId: employee.taxProfile?.id,
+      residentTaxNoticeId: residentNotice.id,
     },
   });
 

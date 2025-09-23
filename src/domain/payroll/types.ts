@@ -1,4 +1,4 @@
-import type { ResidentTaxMethod, WithholdingType } from '@prisma/client';
+import type { PayrollSalaryType, ResidentTaxMethod, WithholdingType } from '@prisma/client';
 
 import type { PayrollItemCategory } from '@/types/payroll';
 
@@ -17,10 +17,18 @@ export type EmployeeTaxSnapshot = {
   withholdingType: WithholdingType;
 };
 
+export type PayrollMasterSnapshot = {
+  salaryType: PayrollSalaryType;
+  baseSalary: number;
+  overtimeDivisor?: number | null;
+  overtimeMultiplier?: number | null;
+};
+
 export type EmployeeSnapshot = {
   id: number;
   socialInsurance?: EmployeeSocialInsuranceSnapshot | null;
   tax?: EmployeeTaxSnapshot | null;
+  payrollMaster?: PayrollMasterSnapshot | null;
 };
 
 export type AllowanceEntry = {
@@ -44,6 +52,8 @@ export type PayrollCalculationContext = {
   baseSalary: number;
   overtimeHours?: number;
   overtimeRate?: number;
+  overtimeDivisor?: number;
+  overtimeMultiplier?: number;
   allowances: AllowanceEntry[];
   deductions: DeductionEntry[];
   bonusAmount?: number;

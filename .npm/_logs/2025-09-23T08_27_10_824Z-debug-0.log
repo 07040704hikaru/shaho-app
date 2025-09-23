@@ -1,0 +1,18 @@
+0 verbose cli /usr/local/bin/node /usr/local/lib/node_modules/npm/bin/npm-cli.js
+1 info using npm@11.6.0
+2 info using node@v24.8.0
+3 silly config load:file:/usr/local/lib/node_modules/npm/npmrc
+4 silly config load:file:/Users/hikaru/shaho-app/.npmrc
+5 silly config load:file:/usr/local/etc/npmrc
+6 verbose title npm exec prisma generate
+7 verbose argv "exec" "--" "prisma" "generate"
+8 verbose logfile logs-max:10 dir:/Users/hikaru/shaho-app/.npm/_logs/2025-09-23T08_27_10_824Z-
+9 verbose logfile /Users/hikaru/shaho-app/.npm/_logs/2025-09-23T08_27_10_824Z-debug-0.log
+10 silly logfile done cleaning log files
+11 http fetch GET https://registry.npmjs.org/npm attempt 1 failed with ENOTFOUND
+12 verbose cwd /Users/hikaru/shaho-app
+13 verbose os Darwin 24.6.0
+14 verbose node v24.8.0
+15 verbose npm  v11.6.0
+16 verbose exit 1
+17 verbose code 1

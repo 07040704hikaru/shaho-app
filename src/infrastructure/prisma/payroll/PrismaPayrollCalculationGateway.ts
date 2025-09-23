@@ -14,6 +14,7 @@ export class PrismaPayrollCalculationGateway implements PayrollCalculationGatewa
       include: {
         socialInsuranceProfile: true,
         taxProfile: true,
+        payrollMaster: true,
       },
     });
 
@@ -40,6 +41,19 @@ export class PrismaPayrollCalculationGateway implements PayrollCalculationGatewa
             dependentsCount: employee.taxProfile.dependentsCount,
             residentTaxMethod: employee.taxProfile.residentTaxMethod,
             withholdingType: employee.taxProfile.withholdingType,
+          }
+        : null,
+      payrollMaster: employee.payrollMaster
+        ? {
+            salaryType: employee.payrollMaster.salaryType,
+            baseSalary: Number(employee.payrollMaster.baseSalary),
+            overtimeDivisor: employee.payrollMaster.overtimeDivisor,
+            overtimeMultiplier: employee.payrollMaster.overtimeMultiplier
+              ? Number(employee.payrollMaster.overtimeMultiplier)
+              : null,
+            socialInsuranceProfileId: employee.payrollMaster.socialInsuranceProfileId,
+            taxProfileId: employee.payrollMaster.taxProfileId,
+            residentTaxNoticeId: employee.payrollMaster.residentTaxNoticeId,
           }
         : null,
     };
