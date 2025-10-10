@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 480">
+  <defs>
+    <radialGradient id="nightGlow" cx="0.5" cy="0.3" r="0.8">
+      <stop offset="0%" stop-color="#ffe8b6"/>
+      <stop offset="60%" stop-color="#ff7aa2" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#2a1c4c"/>
+    </radialGradient>
+  </defs>
+  <rect width="360" height="480" fill="#130a26"/>
+  <circle cx="180" cy="160" r="140" fill="url(#nightGlow)" opacity="0.8"/>
+  <g transform="translate(60 220)">
+    <path d="M0 160L40 40H120L160 160Z" fill="#1f2c54"/>
+    <path d="M140 160L200 20H300L340 160Z" fill="#2e3b6f"/>
+    <line x1="20" y1="100" x2="320" y2="40" stroke="#ffd36f" stroke-width="3" stroke-dasharray="6 12" opacity="0.7"/>
+    <circle cx="80" cy="60" r="6" fill="#ffd36f"/>
+    <circle cx="180" cy="40" r="8" fill="#ffd36f"/>
+    <circle cx="280" cy="20" r="5" fill="#ffd36f"/>
+  </g>
+  <path d="M40 440H320L300 480H60Z" fill="#0b0818"/>
+  <text x="180" y="420" text-anchor="middle" font-family="'Inter','Noto Sans JP'" font-size="22" fill="#f7cfff">
+    光と音のフィナーレでサプライズ！
+  </text>
+</svg>

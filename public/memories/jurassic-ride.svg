@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 480">
+  <rect width="360" height="480" fill="#e8f6ff"/>
+  <g transform="translate(40 140)">
+    <path d="M0 220C40 160 120 150 180 200C240 250 300 240 320 220" fill="#90c7ff" opacity="0.6"/>
+    <path d="M40 220L120 120L200 220Z" fill="#c0e4a5" opacity="0.8"/>
+    <path d="M160 220L220 140L300 220Z" fill="#b1d48d" opacity="0.8"/>
+    <g transform="translate(90 60)">
+      <ellipse cx="60" cy="60" rx="64" ry="48" fill="#6fa273"/>
+      <path d="M10 70L30 40H90L110 70Z" fill="#3f6645"/>
+      <circle cx="30" cy="48" r="6" fill="#ffffff"/>
+      <circle cx="90" cy="48" r="6" fill="#ffffff"/>
+      <path d="M45 70C55 80 65 80 75 70" stroke="#ffffff" stroke-width="6" stroke-linecap="round"/>
+    </g>
+  </g>
+  <text x="180" y="410" text-anchor="middle" font-family="'Inter','Noto Sans JP'" font-size="22" fill="#3b5962">
+    恐竜に食べられちゃう演技で撮影！
+  </text>
+</svg>

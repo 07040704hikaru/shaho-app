@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480">
+  <defs>
+    <linearGradient id="osakaSky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#f5f9ff"/>
+      <stop offset="100%" stop-color="#c7d8ff"/>
+    </linearGradient>
+    <linearGradient id="osakaSun" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ffe0a8"/>
+      <stop offset="100%" stop-color="#ffb865"/>
+    </linearGradient>
+    <linearGradient id="osakaRiver" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#98c8ff"/>
+      <stop offset="100%" stop-color="#4f8bff"/>
+    </linearGradient>
+  </defs>
+  <rect width="640" height="480" rx="36" fill="url(#osakaSky)"/>
+  <circle cx="520" cy="120" r="70" fill="url(#osakaSun)" opacity="0.85"/>
+  <path d="M0 320C120 280 220 280 340 310C430 332 550 320 640 290V480H0Z" fill="url(#osakaRiver)" opacity="0.5"/>
+  <g transform="translate(120 120)">
+    <path d="M0 200L60 60H120L180 200Z" fill="#f5f7ff" stroke="#6d7bff" stroke-width="6" opacity="0.85"/>
+    <path d="M200 200L250 80H300L350 200Z" fill="#ffe9f2" stroke="#f07aa6" stroke-width="6" opacity="0.85"/>
+    <rect x="80" y="120" width="60" height="80" fill="#6d7bff" opacity="0.6"/>
+    <rect x="240" y="120" width="50" height="80" fill="#f07aa6" opacity="0.6"/>
+    <circle cx="310" cy="140" r="24" fill="#f3c4ff" opacity="0.8"/>
+  </g>
+  <text x="60" y="380" font-family="'Inter','Noto Sans JP',sans-serif" font-size="48" font-weight="600" fill="#2b356b">
+    Osaka Birthday Adventure
+  </text>
+  <text x="60" y="424" font-family="'Inter','Noto Sans JP',sans-serif" font-size="26" fill="#4d5a9c">
+    USJと大阪・関西万博で未来に触れる旅
+  </text>
+</svg>

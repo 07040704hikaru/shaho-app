@@ -78,11 +78,11 @@ async function main() {
           },
           {
             orderIndex: 1,
-            name: "クッパ城バトルゾーン",
+            name: "ドンキーコング・エリア",
             dayLabel: "Day 1",
             dateLabel: "Oct 09",
             time: "10:45",
-            location: "スーパー・ニンテンドー・ワールド™ クッパ城",
+            location: "スーパー・ニンテンドー・ワールド™ ドンキーコング・エリア",
             address: "2 Chome-1-33 Sakurajima, Konohana Ward, Osaka",
             note: "トロフィーを眺めたら深呼吸。ライバルに挑む準備を！",
             lat: 34.6668,

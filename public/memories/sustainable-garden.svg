@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 480">
+  <rect width="360" height="480" fill="#f2fff4"/>
+  <g transform="translate(40 140)">
+    <ellipse cx="140" cy="200" rx="140" ry="40" fill="#c8f0d4"/>
+    <path d="M30 200C50 160 90 130 140 130C190 130 230 160 250 200Z" fill="#9edea6"/>
+    <g transform="translate(50 -20)">
+      <path d="M40 200L60 120L80 200Z" fill="#6fbf87"/>
+      <path d="M120 200L140 110L160 200Z" fill="#6fbf87"/>
+      <circle cx="60" cy="120" r="14" fill="#ffd36f"/>
+      <circle cx="140" cy="110" r="12" fill="#ffd36f" opacity="0.8"/>
+    </g>
+    <path d="M0 170H280" stroke="#ffffff" stroke-width="10" stroke-linecap="round" opacity="0.4"/>
+  </g>
+  <text x="180" y="400" text-anchor="middle" font-family="'Inter','Noto Sans JP'" font-size="22" fill="#507c59">
+    ガーデンでチェキ撮影＆キーワードメモ
+  </text>
+</svg>

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 480">
+  <rect width="360" height="480" fill="#f0fff2"/>
+  <g transform="translate(40 120)">
+    <path d="M0 220L40 100L80 220Z" fill="#8fd48b" opacity="0.7"/>
+    <path d="M220 220L260 80L300 220Z" fill="#8fd48b" opacity="0.7"/>
+    <rect x="60" y="110" width="180" height="140" rx="26" fill="#f9c57d"/>
+    <path d="M90 120V70C90 40 120 10 150 10C180 10 210 40 210 70V120" fill="#c0783c"/>
+    <ellipse cx="110" cy="150" rx="18" ry="12" fill="#7c4b2b"/>
+    <ellipse cx="190" cy="150" rx="18" ry="12" fill="#7c4b2b"/>
+    <circle cx="150" cy="180" r="28" fill="#ffde99"/>
+  </g>
+  <text x="180" y="400" text-anchor="middle" font-family="'Inter','Noto Sans JP'" font-size="22" fill="#4a5b3a">
+    バナナベンチでセルフィー
+  </text>
+</svg>

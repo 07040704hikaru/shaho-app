@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 480">
+  <rect width="360" height="480" fill="#eef7ff"/>
+  <g transform="translate(40 120)">
+    <rect x="0" y="160" width="280" height="80" rx="20" fill="#6ec6ff" opacity="0.65"/>
+    <rect x="30" y="120" width="220" height="60" rx="16" fill="#92ddff" opacity="0.8"/>
+    <rect x="60" y="80" width="160" height="60" rx="14" fill="#c8f0ff"/>
+    <circle cx="140" cy="110" r="18" fill="#fef5a8"/>
+    <path d="M290 240L320 80L340 240Z" fill="#dff6ff" stroke="#6ec6ff" stroke-width="5"/>
+    <circle cx="280" cy="100" r="10" fill="#ffffff" opacity="0.8"/>
+  </g>
+  <text x="180" y="410" text-anchor="middle" font-family="'Inter','Noto Sans JP'" font-size="21" fill="#3c6b92">
+    未来のくらしを体験して共有しよう
+  </text>
+</svg>

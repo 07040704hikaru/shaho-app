@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 480">
+  <rect width="360" height="480" fill="#ecf7ff"/>
+  <g transform="translate(60 120)">
+    <rect x="40" y="140" width="160" height="80" rx="40" fill="#ff5353"/>
+    <rect x="0" y="200" width="240" height="20" rx="10" fill="#ff8c5a"/>
+    <path d="M20 160C20 120 80 90 120 90C160 90 220 120 220 160" fill="#ffe27a"/>
+    <path d="M60 90C60 60 120 40 120 20C120 40 180 60 180 90" fill="#fff48b"/>
+    <circle cx="80" cy="150" r="16" fill="#ffffff"/>
+    <rect x="74" y="138" width="12" height="24" rx="6" fill="#ffd93b"/>
+    <circle cx="160" cy="150" r="16" fill="#ffffff"/>
+    <rect x="154" y="138" width="12" height="24" rx="6" fill="#ffd93b"/>
+  </g>
+  <text x="180" y="390" text-anchor="middle" font-family="'Inter','Noto Sans JP'" font-size="22" fill="#3e475f">
+    ハテナブロックを同時パンチ！
+  </text>
+</svg>

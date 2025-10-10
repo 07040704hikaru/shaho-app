@@ -378,58 +378,53 @@ function TripExperienceInner({ plan }: { plan: TripPlan }) {
     stateHydratedRef.current = false;
     skipNextPersistRef.current = true;
 
-    setManualUnlocks(new Set());
-    setAwardedArrivals(new Set());
-    setCompletedMissions(new Set());
-
     try {
       const raw = window.localStorage.getItem(storageKey);
       if (!raw) {
+        setManualUnlocks(new Set());
+        setAwardedArrivals(new Set());
+        setCompletedMissions(new Set());
         return;
       }
 
       const parsed = JSON.parse(raw) as PersistedTripProgress;
       if (!parsed || typeof parsed !== "object") {
+        setManualUnlocks(new Set());
+        setAwardedArrivals(new Set());
+        setCompletedMissions(new Set());
         return;
       }
 
       const validSpotIds = new Set(allSpotIds);
       const validMissionIds = new Set(allMissionIds);
 
-      if (Array.isArray(parsed.manualUnlocks)) {
-        setManualUnlocks(
-          new Set(
-            parsed.manualUnlocks.filter(
-              (id): id is string =>
-                typeof id === "string" && validSpotIds.has(id),
-            ),
-          ),
-        );
-      }
+      const manualUnlockArray = Array.isArray(parsed.manualUnlocks)
+        ? parsed.manualUnlocks.filter(
+            (id): id is string =>
+              typeof id === "string" && validSpotIds.has(id),
+          )
+        : [];
+      const awardedArrivalArray = Array.isArray(parsed.awardedArrivals)
+        ? parsed.awardedArrivals.filter(
+            (id): id is string =>
+              typeof id === "string" && validSpotIds.has(id),
+          )
+        : [];
+      const completedMissionArray = Array.isArray(parsed.completedMissions)
+        ? parsed.completedMissions.filter(
+            (id): id is string =>
+              typeof id === "string" && validMissionIds.has(id),
+          )
+        : [];
 
-      if (Array.isArray(parsed.awardedArrivals)) {
-        setAwardedArrivals(
-          new Set(
-            parsed.awardedArrivals.filter(
-              (id): id is string =>
-                typeof id === "string" && validSpotIds.has(id),
-            ),
-          ),
-        );
-      }
-
-      if (Array.isArray(parsed.completedMissions)) {
-        setCompletedMissions(
-          new Set(
-            parsed.completedMissions.filter(
-              (id): id is string =>
-                typeof id === "string" && validMissionIds.has(id),
-            ),
-          ),
-        );
-      }
+      setManualUnlocks(new Set(manualUnlockArray));
+      setAwardedArrivals(new Set(awardedArrivalArray));
+      setCompletedMissions(new Set(completedMissionArray));
     } catch (error) {
       console.warn("旅の進行状況を読み込めませんでした。", error);
+      setManualUnlocks(new Set());
+      setAwardedArrivals(new Set());
+      setCompletedMissions(new Set());
     } finally {
       stateHydratedRef.current = true;
     }
