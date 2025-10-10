@@ -1,46 +1,53 @@
-# 社会保険・税対応 給与計算アプリ (Next.js + Prisma)
+# Birthday Travel Album
 
-TypeScript・Next.js (App Router) と Prisma を用いて、以下の社会保険・税関連機能を再現するための土台を用意しました。
+旅の移動に合わせて写真・メッセージ・スケジュールが解放されていくサプライズ用ウェブアプリです。Next.js (App Router) と Prisma を使い、GPS 判定でスポットを開放する体験を提供します。
 
-- 従業員基礎情報: 標準報酬月額、被保険者区分、扶養家族、税情報、マイナンバー、資格履歴
-- 保険料計算: 健康保険・厚生年金・介護保険・雇用保険・労災保険の料率管理と本人/会社負担額算出
-- 税額計算: 源泉所得税（月額表・賞与税率）、住民税特別徴収の処理
-- 給与計算ロジックとの連携: 支給項目／控除項目から総支給・差引支給額を試算
-- 月変・算定サポート: 月次スナップショットと標準報酬月額の判定 UI（月額変更届/算定基礎届の基準確認）
-- 源泉税・住民税の可視化: 税額表シミュレーターと住民税特別徴収スケジューラ
-- 届出・帳票出力の足がかり: ReportQueueItem で電子申請や PDF 生成に拡張可
+## 主な機能
+
+- 旅のハイライトをまとめたヒーローセクションとカスタム SVG ルートマップ
+- スポットごとのタイムライン：到着距離に応じて自動で開放、手動シミュレートも可能
+- スポットに紐づく思い出メモ、手紙メッセージ、差し替え可能なアルバムギャラリー
+- 到着ボーナスとミッション（フォト・チェックイン・クエスト）でポイントが貯まるスコアボード
+- Prisma/PostgreSQL を使った旅・スポット・写真・ミッションデータの永続化
 
 ## セットアップ
 
 ```bash
 npm install
 npx prisma generate
-npx prisma migrate dev --name init
+npx prisma db push
+npm run db:seed
 npm run dev
 ```
 
-環境変数 `DATABASE_URL` に PostgreSQL の接続文字列を設定してください。
+環境変数 `DATABASE_URL` に PostgreSQL の接続文字列を設定してください。（例: `.env` に保存）
 
-## ディレクトリ構成
+## Prisma モデル
 
-- `prisma/schema.prisma`: 社保・税ドメインをカバーするモデリング
-- `src/lib/calculations/`: 社会保険計算と税額計算のサービス層
-- `src/app/api/payroll/calculate`: 給与シミュレーション用 API
-- `src/app/employees`: 従業員マスタ UI
-- `src/app/payroll`: 給与シミュレーターと計算履歴 UI
-- `src/app/insurance/standard-remuneration`: 標準報酬月額の判定ツール
-- `src/app/tax/brackets`: 源泉所得税表の可視化・シミュレーション
-- `src/app/tax/resident`: 住民税特別徴収スケジュール管理
+- `Trip`: 旅全体のメタデータ（タイトル、日程、ヒーロー画像、サウンドトラック URL など）
+- `Spot`: 各スポットの時間・場所・メッセージ・地図上の座標・解放距離
+- `Photo`: スポットに紐づくアルバム画像（順序・キャプション付き）
 
-## 今後の拡張ポイント
+初期データは `prisma/seed.ts` で USJ と大阪・関西万博を巡る誕生日旅行が登録されます。写真は `public/memories` 以下の SVG を差し替えるだけで OK です。
 
-- 料率テーブル・税額表の最新値の投入とメンテナンス UI
-- 算定基礎 / 月額変更届ロジックの実装
-- 電子申請フォーマットや帳票出力サービスの追加
-- Prisma によるドメインサービス層を整備してテストしやすくする
-- 実行ログ、通知、承認ワークフローの整備
+## ディレクトリ構成（抜粋）
 
-## 注意点
+- `src/app/page.tsx` — Prisma から旅データを読み込み、クライアント体験へ渡すサーバーコンポーネント
+- `src/components/TripExperience.tsx` — タイムラインとスポット開放ロジックを担うクライアントコンポーネント
+- `src/components/TripMap.tsx` — 旅ルートを描画する SVG マップ
+- `src/data/tripPlan.ts` — Prisma から `TripPlan` 型へ整形するユーティリティ
+- `src/lib/prisma.ts` — PrismaClient のシングルトン
 
-- ネットワークアクセス制限のため、このリポジトリには依存パッケージをインストールしていません。`package.json` を元にローカルで `npm install` を実行してください。
-- 税額表・保険料計算ロジックは概算モデルです。実運用時は最新の法令値を投入し、端数調整等を確認してください。
+## データを編集するには
+
+1. `prisma/seed.ts` を編集して `npm run db:seed` を再実行するか、Prisma Studio (`npx prisma studio`) を使って直接レコードを更新します。
+2. スポットごとの写真は `public/memories/*.svg`（もしくは任意の画像ファイル）を差し替えてください。
+3. 解放判定用の座標 (`lat`, `lng`, `mapX`, `mapY`) と `unlockRadiusMeters` を好みの値に調整します。`arrivalPoints` や各ミッションの `rewardPoints` を変更すればポイントラリーもアレンジできます。
+
+## 開発のヒント
+
+- GPS 許可が得られない場合に備え、タイムラインの「解放をシミュレート」で手動開放を用意しています。
+- 旅を追加したい場合は `Trip` を新規作成し、`Mission` や `Photo` を紐づけた上で `slug` を決めて `getTripPlan(slug)` を呼び出すように変更します。
+- 写真を実ファイルへ差し替えるときはビルド済みパス（例: `/memories/...`）に合わせてファイル名を統一するのが簡単です。
+
+楽しいサプライズの旅を！

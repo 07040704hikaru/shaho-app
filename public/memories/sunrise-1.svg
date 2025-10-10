@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 520">
+  <defs>
+    <linearGradient id="sunriseSky" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0%" stop-color="#ffdf9b" />
+      <stop offset="70%" stop-color="#ff9e7a" />
+    </linearGradient>
+    <linearGradient id="sunriseTemple" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#ff6a4b" />
+      <stop offset="100%" stop-color="#bc3248" />
+    </linearGradient>
+  </defs>
+  <rect width="420" height="520" fill="url(#sunriseSky)" />
+  <circle cx="210" cy="210" r="90" fill="#fff2c6" opacity="0.9" />
+  <path
+    d="M0 360 C120 330 200 320 320 340 C382 350 420 342 420 342 L420 520 L0 520 Z"
+    fill="#fdf2d4"
+    opacity="0.5"
+  />
+  <g transform="translate(60 170)" fill="url(#sunriseTemple)">
+    <rect x="40" y="120" width="220" height="20" rx="10" />
+    <rect x="80" y="80" width="140" height="20" rx="9" />
+    <rect x="110" y="40" width="80" height="20" rx="8" />
+    <rect x="130" y="0" width="40" height="20" rx="6" />
+  </g>
+  <rect x="190" y="290" width="40" height="90" fill="#57243a" />
+  <path
+    d="M0 400 C120 430 180 420 280 390 C330 374 360 380 420 400 L420 520 L0 520 Z"
+    fill="#f9c78e"
+    opacity="0.5"
+  />
+  <text
+    x="210"
+    y="450"
+    text-anchor="middle"
+    font-family="'Inter', 'Noto Sans JP', sans-serif"
+    font-size="24"
+    fill="#782a3b"
+  >
+    朝陽に染まる清水寺
+  </text>
+</svg>

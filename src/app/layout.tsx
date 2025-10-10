@@ -1,12 +1,10 @@
-import './globals.css';
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
-
-const inter = Inter({ subsets: ['latin'] });
+import type { Metadata } from "next";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: '社会保険・税シミュレータ',
-  description: '給与計算のための社会保険料・源泉所得税計算モジュール',
+  title: "Birthday Travel Album",
+  description:
+    "A travel companion that unlocks memories, heartfelt messages, and trip details as you journey together.",
 };
 
 export default function RootLayout({
@@ -16,9 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ja">
-      <body className={inter.className}>
-        <main className="container">{children}</main>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

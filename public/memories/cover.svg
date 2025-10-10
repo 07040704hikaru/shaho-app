@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 480">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#eef2ff" />
+      <stop offset="100%" stop-color="#cfd9ff" />
+    </linearGradient>
+    <linearGradient id="river" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0%" stop-color="#9ab6ff" />
+      <stop offset="100%" stop-color="#6f8bff" />
+    </linearGradient>
+  </defs>
+
+  <rect width="640" height="480" fill="url(#bg)" rx="40" />
+
+  <path
+    d="M 0 420 C 140 360 200 340 310 370 C 412 398 470 390 640 330 L 640 480 L 0 480 Z"
+    fill="url(#river)"
+    opacity="0.6"
+  />
+
+  <circle cx="500" cy="140" r="90" fill="#ffedb6" opacity="0.8" />
+  <circle cx="520" cy="120" r="40" fill="#fff8d6" opacity="0.7" />
+
+  <g fill="#ffffff" opacity="0.8">
+    <circle cx="120" cy="100" r="20" />
+    <circle cx="170" cy="118" r="14" />
+    <circle cx="210" cy="96" r="18" />
+  </g>
+
+  <g fill="#8ea2ff" opacity="0.3">
+    <path d="M140 252 C200 170 270 180 320 250 C380 340 450 320 530 230" stroke-width="16" stroke-linecap="round" stroke="#8ea2ff" fill="none" />
+  </g>
+
+  <g transform="translate(120 280)">
+    <rect x="-40" y="-120" width="80" height="140" rx="20" fill="#fefefe" opacity="0.9" />
+    <rect x="60" y="-100" width="90" height="150" rx="18" fill="#ffffff" opacity="0.9" />
+    <rect x="170" y="-115" width="80" height="140" rx="20" fill="#f2f6ff" opacity="0.9" />
+    <rect x="65" y="-40" width="25" height="45" fill="#d8e1ff" />
+    <rect x="110" y="-40" width="25" height="45" fill="#d8e1ff" />
+    <circle cx="100" cy="30" r="12" fill="#d8e1ff" />
+  </g>
+
+  <text
+    x="60"
+    y="380"
+    font-family="'Inter', 'Noto Sans JP', sans-serif"
+    font-size="54"
+    font-weight="600"
+    fill="#314074"
+  >
+    Kyoto Birthday Escape
+  </text>
+  <text
+    x="60"
+    y="420"
+    font-family="'Inter', 'Noto Sans JP', sans-serif"
+    font-size="28"
+    fill="#5260a8"
+  >
+    思い出と旅行計画がリンクする旅
+  </text>
+</svg>

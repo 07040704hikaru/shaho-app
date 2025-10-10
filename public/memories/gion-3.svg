@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 520">
+  <defs>
+    <linearGradient id="gionBridge" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#ffd6c9" />
+      <stop offset="100%" stop-color="#ff8f8f" />
+    </linearGradient>
+  </defs>
+  <rect width="420" height="520" fill="#fff5ef" />
+  <path
+    d="M0 380 L420 320 L420 520 L0 520 Z"
+    fill="#c4d8ff"
+    opacity="0.65"
+  />
+  <g stroke="#334780" stroke-width="8" stroke-linecap="round">
+    <path d="M30 340 H390" stroke="#4b5aa5" />
+    <path d="M30 340 C140 260 280 260 390 340" fill="none" />
+  </g>
+  <g>
+    <path d="M90 340 V260" stroke="#4b5aa5" stroke-width="6" />
+    <path d="M170 340 V240" stroke="#4b5aa5" stroke-width="6" />
+    <path d="M250 340 V240" stroke="#4b5aa5" stroke-width="6" />
+    <path d="M330 340 V260" stroke="#4b5aa5" stroke-width="6" />
+  </g>
+  <path
+    d="M40 240 C120 190 180 200 220 230 C260 260 320 270 400 240"
+    fill="none"
+    stroke="url(#gionBridge)"
+    stroke-width="20"
+    stroke-linecap="round"
+  />
+  <line
+    x1="60"
+    y1="220"
+    x2="360"
+    y2="220"
+    stroke="#fcb8a7"
+    stroke-width="12"
+    stroke-linecap="round"
+  />
+  <circle cx="320" cy="170" r="30" fill="#98d17c" />
+  <line
+    x1="320"
+    y1="140"
+    x2="320"
+    y2="200"
+    stroke="#507042"
+    stroke-width="10"
+    stroke-linecap="round"
+  />
+  <path
+    d="M0 420 C120 380 200 390 300 410 C380 428 420 404 420 404 L420 520 L0 520 Z"
+    fill="#a3bdfc"
+    opacity="0.6"
+  />
+  <text
+    x="210"
+    y="450"
+    text-anchor="middle"
+    font-family="'Inter', 'Noto Sans JP', sans-serif"
+    font-size="22"
+    fill="#4b5aa5"
+  >
+    柳の木の下で
+  </text>
+</svg>

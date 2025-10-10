@@ -1,394 +1,895 @@
-import { Prisma, PrismaClient } from '@prisma/client';
+import { MissionType, PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  await prisma.reportQueueItem.deleteMany();
-  await prisma.residentTaxAllocation.deleteMany();
-  await prisma.residentTaxNotice.deleteMany();
-  await prisma.payrollComponent.deleteMany();
-  await prisma.payrollCalculation.deleteMany();
-  await prisma.payrollRun.deleteMany();
-  await prisma.employeeAllowance.deleteMany();
-  await prisma.employeeDeduction.deleteMany();
-  await prisma.dependent.deleteMany();
-  await prisma.employeeSocialInsurance.deleteMany();
-  await prisma.employeeTaxProfile.deleteMany();
-  await prisma.employee.deleteMany();
-  await prisma.office.deleteMany();
-  await prisma.company.deleteMany();
-  await prisma.insuranceRate.deleteMany();
-  await prisma.incomeTaxBracket.deleteMany();
-  await prisma.payrollItemDefinition.deleteMany();
+  await prisma.mission.deleteMany();
+  await prisma.photo.deleteMany();
+  await prisma.spot.deleteMany();
+  await prisma.trip.deleteMany();
 
-  const company = await prisma.company.create({
+  await prisma.trip.create({
     data: {
-      name: '社会保険ソリューションズ株式会社',
-      kanaName: 'シャカイホケンソリューションズ',
-      corporateNumber: '1234567890123',
-      postalCode: '1000001',
-      address: '東京都千代田区千代田1-1',
-    },
-  });
-
-  const hq = await prisma.office.create({
-    data: {
-      companyId: company.id,
-      name: '本社',
-      officeNumber: '1300-000001-0',
-      postalCode: '1000001',
-      address: '東京都千代田区千代田1-1',
-    },
-  });
-
-  await prisma.payrollItemDefinition.createMany({
-    data: [
-      {
-        code: 'BASE_SALARY',
-        name: '基本給',
-        category: 'EARNING',
-        taxable: true,
-        socialInsuranceApplicable: true,
-        employmentInsuranceApplicable: true,
-      },
-      {
-        code: 'COMMUTE_ALLOWANCE',
-        name: '通勤手当',
-        category: 'ALLOWANCE',
-        taxable: false,
-        socialInsuranceApplicable: false,
-        employmentInsuranceApplicable: false,
-      },
-      {
-        code: 'HOUSING_ALLOWANCE',
-        name: '住宅手当',
-        category: 'ALLOWANCE',
-        taxable: true,
-        socialInsuranceApplicable: true,
-      },
-      {
-        code: 'INCOME_TAX',
-        name: '源泉所得税',
-        category: 'TAX',
-        taxable: false,
-        socialInsuranceApplicable: false,
-      },
-      {
-        code: 'RESIDENT_TAX',
-        name: '住民税',
-        category: 'TAX',
-        taxable: false,
-        socialInsuranceApplicable: false,
-      },
-    ],
-  });
-
-  const insuranceRates = [
-    {
-      insuranceType: 'HEALTH',
-      grade: 20,
-      thresholdLow: new Prisma.Decimal(290000),
-      thresholdHigh: new Prisma.Decimal(310000),
-      employeeRate: new Prisma.Decimal(0.0495),
-      employerRate: new Prisma.Decimal(0.0495),
-      effectiveFrom: new Date('2024-03-01'),
-    },
-    {
-      insuranceType: 'PENSION',
-      grade: 20,
-      thresholdLow: new Prisma.Decimal(290000),
-      thresholdHigh: new Prisma.Decimal(310000),
-      employeeRate: new Prisma.Decimal(0.0915),
-      employerRate: new Prisma.Decimal(0.0915),
-      effectiveFrom: new Date('2024-03-01'),
-    },
-    {
-      insuranceType: 'NURSING',
-      employeeRate: new Prisma.Decimal(0.004),
-      employerRate: new Prisma.Decimal(0.004),
-      effectiveFrom: new Date('2024-03-01'),
-    },
-    {
-      insuranceType: 'EMPLOYMENT',
-      employeeRate: new Prisma.Decimal(0.003),
-      employerRate: new Prisma.Decimal(0.006),
-      effectiveFrom: new Date('2024-04-01'),
-    },
-    {
-      insuranceType: 'WORKERS',
-      businessCategory: 'IT_SERVICES',
-      employeeRate: new Prisma.Decimal(0),
-      employerRate: new Prisma.Decimal(0.0025),
-      effectiveFrom: new Date('2024-04-01'),
-    },
-  ] satisfies Prisma.InsuranceRateCreateManyInput[];
-
-  await prisma.insuranceRate.createMany({ data: insuranceRates });
-
-  const taxBrackets = [
-    {
-      tableType: 'MONTHLY',
-      dependents: 0,
-      lowerBound: 0,
-      upperBound: 304999,
-      taxAmount: 0,
-      deduction: 0,
-      effectiveFrom: new Date('2023-01-01'),
-    },
-    {
-      tableType: 'MONTHLY',
-      dependents: 0,
-      lowerBound: 305000,
-      upperBound: 349999,
-      taxAmount: 1530,
-      deduction: 0,
-      effectiveFrom: new Date('2023-01-01'),
-    },
-    {
-      tableType: 'MONTHLY',
-      dependents: 1,
-      lowerBound: 305000,
-      upperBound: 349999,
-      taxAmount: 630,
-      deduction: 0,
-      effectiveFrom: new Date('2023-01-01'),
-    },
-    {
-      tableType: 'BONUS',
-      dependents: 0,
-      lowerBound: 0,
-      upperBound: 1000000,
-      taxAmount: 0.102 * 1000000,
-      deduction: 0,
-      effectiveFrom: new Date('2023-01-01'),
-    },
-  ] satisfies Prisma.IncomeTaxBracketCreateManyInput[];
-
-  await prisma.incomeTaxBracket.createMany({ data: taxBrackets });
-
-  const employee = await prisma.employee.create({
-    data: {
-      companyId: company.id,
-      officeId: hq.id,
-      employeeCode: 'E001',
-      lastName: '山田',
-      firstName: '太郎',
-      lastNameKana: 'ヤマダ',
-      firstNameKana: 'タロウ',
-      displayName: '山田 太郎',
-      dateOfBirth: new Date('1990-04-01'),
-      gender: 'MALE',
-      hireDate: new Date('2020-04-01'),
-      employmentType: 'REGULAR',
-      email: 'taro.yamada@example.com',
-      phone: '050-1234-5678',
-      postalCode: '1000001',
-      address: '東京都千代田区千代田1-1',
-      socialInsuranceProfile: {
-        create: {
-          insuredClassification: 'REGULAR',
-          pensionCategory: 'CATEGORY_II',
-          standardMonthlyRemuneration: new Prisma.Decimal(300000),
-          healthInsuranceGrade: 20,
-          nursingCareApplicable: true,
-          employmentInsuranceApplicable: true,
-          workersCompensationClass: 'IT_SERVICES',
-          effectiveFrom: new Date('2020-04-01'),
-        },
-      },
-      taxProfile: {
-        create: {
-          withholdingType: 'BASIC',
-          dependentsCount: 1,
-          hasSpouseExemption: false,
-          residentTaxMethod: 'SPECIAL_COLLECTION',
-          effectiveFrom: new Date('2020-04-01'),
-        },
-      },
-      dependents: {
+      slug: "osaka-birthday-adventure",
+      title: "Osaka Birthday Adventure",
+      subtitle: "USJ・万博・大阪でワクワクを巡る3日間",
+      dedication: "",
+      tripDates: "2025.10.09 - 2025.10.11",
+      baseLocation: "Osaka, Japan",
+      heroImage: "/memories/trip-hero-usj.jpg",
+      giver: "You",
+      receiver: "Birthday Star",
+      soundtrackUrl: "https://open.spotify.com/playlist/3r7yIqJK5ZzTtfbYBZz9n9",
+      spots: {
         create: [
           {
-            name: '山田 花子',
-            relationship: '配偶者',
-            dateOfBirth: new Date('1992-08-10'),
-            isSocialInsuranceDependent: true,
-            isTaxDependent: true,
-            livesTogether: true,
-            startDate: new Date('2020-04-01'),
+            orderIndex: 0,
+            name: "スーパー・ニンテンドー・ワールド™",
+            dayLabel: "Day 1",
+            dateLabel: "Oct 09",
+            time: "09:30",
+            location: "スーパー・ニンテンドー・ワールド 入場アーチ",
+            address: "2 Chome-1-33 Sakurajima, Konohana Ward, Osaka",
+            note: "ワープパイプの前で深呼吸。ここからクエストが本格スタート！",
+            lat: 34.6661,
+            lng: 135.4352,
+            mapX: 32,
+            mapY: 44,
+            unlockRadiusMeters: 120,
+            arrivalPoints: 80,
+            headline: "ゲームの世界に飛び込む準備はOK？",
+            memoryBody: "初めて一緒にマリオカートをクリアした夜のことを覚えてる？その続きをリアルで楽しもう。",
+            prompt: "今日の勝負服ポイントを語り合ってから入場しよう！",
+            message: "ランドマークのワープパイプ前で、冒険前の高揚感をフォトに残そう。",
+            photos: {
+              create: [
+                {
+                  orderIndex: 1,
+                  imageUrl: "/memories/マリオ.jpg",
+                  alt: "Super Nintendo World entrance warp pipe",
+                  caption: "ワープパイプをくぐる瞬間を記念に",
+                },
+                {
+                  orderIndex: 2,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_0406.jpg",
+                  alt: "スーパー・ニンテンドー・ワールド™でのミッション記念写真（1）",
+                  caption: "ミッション達成後に振り返ったスナップショット。",
+                },
+                {
+                  orderIndex: 3,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_0490 2.jpg",
+                  alt: "スーパー・ニンテンドー・ワールド™でのミッション記念写真（2）",
+                  caption: "冒険の余韻を残したフォトメモリー。",
+                },
+              ],
+            },
+            missions: {
+              create: [
+                {
+                  title: "パワーアップバンドでスタートショット",
+                  type: MissionType.PHOTO,
+                  description: "入場ゲートのキノピオ像前で、ふたりでパワーアップポーズを決めて写真を撮ろう。",
+                  rewardPoints: 80,
+                  photoPrompt: "バンドを前に突き出して“Let's-a go!”の掛け声で！",
+                  checklistLabel: "パワーアップポーズを撮影",
+                },
+              ],
+            },
           },
           {
-            name: '山田 次郎',
-            relationship: '子',
-            dateOfBirth: new Date('2021-06-15'),
-            isSocialInsuranceDependent: true,
-            isTaxDependent: true,
-            livesTogether: true,
-            startDate: new Date('2021-06-15'),
+            orderIndex: 1,
+            name: "クッパ城バトルゾーン",
+            dayLabel: "Day 1",
+            dateLabel: "Oct 09",
+            time: "10:45",
+            location: "スーパー・ニンテンドー・ワールド™ クッパ城",
+            address: "2 Chome-1-33 Sakurajima, Konohana Ward, Osaka",
+            note: "トロフィーを眺めたら深呼吸。ライバルに挑む準備を！",
+            lat: 34.6668,
+            lng: 135.4363,
+            mapX: 38,
+            mapY: 50,
+            unlockRadiusMeters: 100,
+            arrivalPoints: 70,
+            headline: "クッパに挑む前の作戦会議",
+            memoryBody: "部屋で何度もタイムアタックを更新したあの熱量を、リアルタイムで再現しよう。",
+            prompt: "それぞれが得意なコースをひとつずつ発表して勝負宣言！",
+            message: "ゴール後は巨大トロフィー前で勝利宣言ツーショットを撮って次のスポットへ。",
+            photos: {
+              create: [
+                {
+                  orderIndex: 1,
+                  imageUrl: "/memories/ドンキーコング.jpg",
+                  alt: "Bowser's Castle trophy hall",
+                  caption: "トロフィーの輝きと一緒に勝利ポーズ",
+                },
+                {
+                  orderIndex: 2,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_0490 3.jpg",
+                  alt: "クッパ城バトルゾーンでのミッション記念写真（1）",
+                  caption: "スリリングな対決後に撮影した勝利の一枚。",
+                },
+                {
+                  orderIndex: 3,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_0490.jpg",
+                  alt: "クッパ城バトルゾーンでのミッション記念写真（2）",
+                  caption: "作戦会議の熱気をそのまま閉じ込めたフォト。",
+                },
+              ],
+            },
+            missions: {
+              create: [
+                {
+                  title: "トロフィー前で勝利エモート",
+                  type: MissionType.PHOTO,
+                  description: "クッパ城の巨大トロフィーを背景に、勝利のガッツポーズを撮影。",
+                  rewardPoints: 65,
+                  photoPrompt: "ポーズは自由！負け顔・勝ち顔の2ショットも面白いかも。",
+                  checklistLabel: "トロフィーショットを撮影",
+                },
+              ],
+            },
+          },
+          {
+            orderIndex: 2,
+            name: "ウィザーディング・ワールド・オブ・ハリー・ポッター™",
+            dayLabel: "Day 1",
+            dateLabel: "Oct 09",
+            time: "12:00",
+            location: "ホグズミード村",
+            address: "2 Chome-1-33 Sakurajima, Konohana Ward, Osaka",
+            note: "ホグズミード村の世界観に浸りながら、杖を構えて散策しよう。",
+            lat: 34.6672,
+            lng: 135.438,
+            mapX: 54,
+            mapY: 48,
+            unlockRadiusMeters: 120,
+            arrivalPoints: 75,
+            headline: "魔法界の街でストーリーを紡ごう",
+            memoryBody: "シリーズを語り合った夜を思い出して、ふたりだけの魔法の思い出を上書きしよう。",
+            prompt: "初めて読んだ巻の思い出をお互いへプレゼン！",
+            message: "バタービールで乾杯して、杖を掲げたところを写真に残そう。",
+            photos: {
+              create: [
+                {
+                  orderIndex: 1,
+                  imageUrl: "/memories/ハリポタ.jpg",
+                  alt: "Hogsmeade village snowy rooftops",
+                  caption: "ホグズミードの看板下で杖を掲げて",
+                },
+                {
+                  orderIndex: 2,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_0493.jpg",
+                  alt: "ウィザーディング・ワールドでのミッション記念写真（1）",
+                  caption: "魔法界での感動を共有した瞬間のショット。",
+                },
+                {
+                  orderIndex: 3,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_0613.jpg",
+                  alt: "ウィザーディング・ワールドでのミッション記念写真（2）",
+                  caption: "杖を掲げたポーズを残したフォトジャーナル。",
+                },
+              ],
+            },
+            missions: {
+              create: [
+                {
+                  title: "ホグズヘッド看板ショット",
+                  type: MissionType.PHOTO,
+                  description: "ホグズミードのアイコン看板前で、“ウィンガーディアム・レヴィオーサ”ポーズを写真に収めよう。",
+                  rewardPoints: 70,
+                  photoPrompt: "杖を斜め上に向けると呪文っぽさUP。",
+                  checklistLabel: "ホグズミード写真を撮影",
+                },
+              ],
+            },
+          },
+          {
+            orderIndex: 3,
+            name: "ホグワーツ城ライティング",
+            dayLabel: "Day 1",
+            dateLabel: "Oct 09",
+            time: "13:00",
+            location: "ホグワーツ城前",
+            address: "2 Chome-1-33 Sakurajima, Konohana Ward, Osaka",
+            note: "城の麓でショーの開始時刻をチェック。夜の光を最大限楽しもう。",
+            lat: 34.6675,
+            lng: 135.4383,
+            mapX: 60,
+            mapY: 54,
+            unlockRadiusMeters: 100,
+            arrivalPoints: 60,
+            headline: "ホグワーツの光に包まれて",
+            memoryBody: "映画館の暗闇で手を握った瞬間を、今度は光のショーで再現しよう。",
+            prompt: "自分が入りたい寮を改めて決めて、その理由をプレゼン！",
+            message: "ショーが終わったら、城を背にシルエットで記念撮影しよう。",
+            photos: {
+              create: [
+                {
+                  orderIndex: 1,
+                  imageUrl: "/memories/ハリポタ.jpg",
+                  alt: "Hogwarts castle silhouette",
+                  caption: "ライトアップされた城を背景にシルエットショット",
+                },
+                {
+                  orderIndex: 2,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_1127.jpg",
+                  alt: "ホグワーツ城ライティングでのミッション記念写真（1）",
+                  caption: "ライトに包まれた余韻をシルエットで残した一枚。",
+                },
+                {
+                  orderIndex: 3,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_1876 2.jpg",
+                  alt: "ホグワーツ城ライティングでのミッション記念写真（2）",
+                  caption: "ナイトショーを見届けたあとの感動シーン。",
+                },
+              ],
+            },
+            missions: {
+              create: [
+                {
+                  title: "城を背にシルエットフォト",
+                  type: MissionType.PHOTO,
+                  description: "ホグワーツ城の正面で、二人のシルエットが浮かぶ写真を撮ろう。",
+                  rewardPoints: 65,
+                  photoPrompt: "手を繋いでハートを作るとよりロマンチック。",
+                  checklistLabel: "シルエットフォトを撮影",
+                },
+              ],
+            },
+          },
+          {
+            orderIndex: 4,
+            name: "ミニオン・パーク",
+            dayLabel: "Day 1",
+            dateLabel: "Oct 09",
+            time: "14:30",
+            location: "ミニオン・パーク",
+            address: "2 Chome-1-33 Sakurajima, Konohana Ward, Osaka",
+            note: "ミニオンの騒がしさに負けないテンションで、スウィートなエリアを満喫しよう。",
+            lat: 34.6657,
+            lng: 135.4354,
+            mapX: 42,
+            mapY: 58,
+            unlockRadiusMeters: 110,
+            arrivalPoints: 60,
+            headline: "いたずら好きな仲間と記念撮影",
+            memoryBody: "ミニオン映画を観て笑い転げた夜のように、ここでも思い切りはしゃごう。",
+            prompt: "好きなミニオンのキャラ名と理由を言い合おう！",
+            message: "巨大なミニオン像の前で、思いっきり変顔ショットを残そう。",
+            photos: {
+              create: [
+                {
+                  orderIndex: 1,
+                  imageUrl: "/memories/ミニオン.jpg",
+                  alt: "Minion Park colourful backdrop",
+                  caption: "パーク中央でポップなツーショット",
+                },
+                {
+                  orderIndex: 2,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_1876.jpg",
+                  alt: "ミニオン・パークでのミッション記念写真（1）",
+                  caption: "ミニオンの世界観を背景にしたスナップフォト。",
+                },
+                {
+                  orderIndex: 3,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_1890 2.jpg",
+                  alt: "ミニオン・パークでのミッション記念写真（2）",
+                  caption: "いたずら心をそのまま写し取った一枚。",
+                },
+              ],
+            },
+            missions: {
+              create: [
+                {
+                  title: "ミニオン像で変顔ショット",
+                  type: MissionType.PHOTO,
+                  description: "パーク中央の大きなミニオン像と一緒に、全力の変顔写真を撮影！",
+                  rewardPoints: 55,
+                  photoPrompt: "手を頬に添えたり、サングラスでアレンジしてもOK。",
+                  checklistLabel: "変顔ミニオンショット",
+                },
+              ],
+            },
+          },
+          {
+            orderIndex: 5,
+            name: "ユニバーサル・ワンダーランド",
+            dayLabel: "Day 1",
+            dateLabel: "Oct 09",
+            time: "15:30",
+            location: "ユニバーサル・ワンダーランド",
+            address: "2 Chome-1-33 Sakurajima, Konohana Ward, Osaka",
+            note: "カラフルな遊具と優しい音楽に包まれながら、童心に戻って散策。",
+            lat: 34.6659,
+            lng: 135.4384,
+            mapX: 48,
+            mapY: 66,
+            unlockRadiusMeters: 110,
+            arrivalPoints: 50,
+            headline: "カラフルな世界で絵本の主人公に",
+            memoryBody: "小さい頃に読んだ絵本のページをめくるように、フォトスポットを探して歩こう。",
+            prompt: "昔好きだったキャラクターを教えあってみよう！",
+            message: "虹色アーチの下で、ジャンプショットかブランコ風ポーズを決めよう。",
+            photos: {
+              create: [
+                {
+                  orderIndex: 1,
+                  imageUrl: "/memories/ワンダーランド.jpg",
+                  alt: "Colorful balloons and characters",
+                  caption: "カラフルアーチで元気いっぱいの一枚を",
+                },
+                {
+                  orderIndex: 2,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_2035.jpg",
+                  alt: "ユニバーサル・ワンダーランドでのミッション記念写真（1）",
+                  caption: "童心に戻って遊んだときの笑顔を切り取った写真。",
+                },
+                {
+                  orderIndex: 3,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_2223.jpg",
+                  alt: "ユニバーサル・ワンダーランドでのミッション記念写真（2）",
+                  caption: "カラフルな背景と一緒に残したジャンプショット。",
+                },
+              ],
+            },
+            missions: {
+              create: [
+                {
+                  title: "虹色アーチでジャンプ！",
+                  type: MissionType.PHOTO,
+                  description: "虹色の飾りの前で、同時ジャンプまたはスキップポーズを写真に残そう。",
+                  rewardPoints: 55,
+                  photoPrompt: "ジャンプが難しければ、飛び跳ねポーズでOK！",
+                  checklistLabel: "虹色アーチ写真を撮影",
+                },
+              ],
+            },
+          },
+          {
+            orderIndex: 6,
+            name: "ジュラシック・パーク",
+            dayLabel: "Day 1",
+            dateLabel: "Oct 09",
+            time: "17:00",
+            location: "ジュラシック・パーク ゾーン",
+            address: "2 Chome-1-33 Sakurajima, Konohana Ward, Osaka",
+            note: "水濡れ注意！ライド前にポンチョを用意してスリルを楽しもう。",
+            lat: 34.6666,
+            lng: 135.4372,
+            mapX: 56,
+            mapY: 74,
+            unlockRadiusMeters: 120,
+            arrivalPoints: 70,
+            headline: "恐竜たちとスリル満点の冒険を",
+            memoryBody: "映画館で肩を寄せ合ったあのドキドキを、リアルな水しぶきで再現しよう。",
+            prompt: "一番好きな恐竜とその理由を語り合ってみて！",
+            message: "ティラノ像の前で“食べられちゃう”ポーズを決めてフォト完成。",
+            photos: {
+              create: [
+                {
+                  orderIndex: 1,
+                  imageUrl: "/memories/ジュラシックパーク.jpg",
+                  alt: "Jurassic Park splash ride",
+                  caption: "水しぶき寸前の迫力ショットをおさえよう",
+                },
+                {
+                  orderIndex: 2,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_2644.jpg",
+                  alt: "ジュラシック・パークでのミッション記念写真（1）",
+                  caption: "ライド直後のドキドキを分かち合ったスナップ。",
+                },
+                {
+                  orderIndex: 3,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_2682.jpg",
+                  alt: "ジュラシック・パークでのミッション記念写真（2）",
+                  caption: "恐竜ゾーンの迫力を背景にしたアクティブショット。",
+                },
+              ],
+            },
+            missions: {
+              create: [
+                {
+                  title: "ティラノから逃げろ！",
+                  type: MissionType.PHOTO,
+                  description: "ティラノサウルス像を背に、全力で逃げる姿を写真に収めよう。",
+                  rewardPoints: 60,
+                  photoPrompt: "片方が追いかけ、片方が逃げる演技をすると臨場感UP。",
+                  checklistLabel: "ティラノショットを撮影",
+                },
+              ],
+            },
+          },
+          {
+            orderIndex: 7,
+            name: "ユニバーサル・スタジオ・ジャパン エントランス",
+            dayLabel: "Day 1",
+            dateLabel: "Oct 09",
+            time: "18:30",
+            location: "USJ メインゲート",
+            address: "2 Chome-1-33 Sakurajima, Konohana Ward, Osaka",
+            note: "夜の地球儀は昼とは違う表情。締めくくりの一枚を忘れずに。",
+            lat: 34.6654,
+            lng: 135.4323,
+            mapX: 24,
+            mapY: 34,
+            unlockRadiusMeters: 160,
+            arrivalPoints: 90,
+            headline: "一日の冒険を振り返るクロージング",
+            memoryBody: "朝に描いた予想と比べて、どんな発見があったか語り合おう。",
+            prompt: "今日のベストスポットとベスト写真を選んで発表しよう！",
+            message: "ライトアップされた地球儀の前で、両手を広げて『最高！』の一枚を。",
+            photos: {
+              create: [
+                {
+                  orderIndex: 1,
+                  imageUrl: "/memories/エントランス.jpg",
+                  alt: "USJ globe at night",
+                  caption: "夜の地球儀は旅のハイライト写真に！",
+                },
+                {
+                  orderIndex: 2,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_4856 2.jpg",
+                  alt: "USJエントランスでのミッション記念写真（1）",
+                  caption: "ライトアップされたゲートで撮影した締めくくりショット。",
+                },
+                {
+                  orderIndex: 3,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_4856.jpg",
+                  alt: "USJエントランスでのミッション記念写真（2）",
+                  caption: "ハグで旅の余韻を感じた一枚。",
+                },
+              ],
+            },
+            missions: {
+              create: [
+                {
+                  title: "地球儀でお疲れさまショット",
+                  type: MissionType.PHOTO,
+                  description: "エントランスの地球儀前で、今日イチのポーズで記念撮影。",
+                  rewardPoints: 70,
+                  photoPrompt: "ジャンプ・ハグ・ピース、何でもOK！",
+                  checklistLabel: "地球儀ショットを撮影",
+                },
+              ],
+            },
+          },
+          {
+            orderIndex: 8,
+            name: "パーク内レストラン",
+            dayLabel: "Day 1",
+            dateLabel: "Oct 09",
+            time: "19:15",
+            location: "USJ レストラン",
+            address: "2 Chome-1-33 Sakurajima, Konohana Ward, Osaka",
+            note: "ディナーは今日のテーマに合わせたメニューをオーダーしよう。",
+            lat: 34.6659,
+            lng: 135.4359,
+            mapX: 36,
+            mapY: 60,
+            unlockRadiusMeters: 120,
+            arrivalPoints: 50,
+            headline: "一日のハイライトを語るディナータイム",
+            memoryBody: "写真を見返しながら、今日のベストショットにタイトルを付けよう。",
+            prompt: "明日の“やってみたいこと”をひとつずつ宣言して乾杯！",
+            message: "お皿やドリンクを重ねて、小さな祝杯フォトで締めくくろう。",
+            photos: {
+              create: [
+                {
+                  orderIndex: 1,
+                  imageUrl: "/memories/レストラン.jpg",
+                  alt: "Dinner table celebration",
+                  caption: "乾杯の瞬間をおいしく記録",
+                },
+                {
+                  orderIndex: 2,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_5882.jpg",
+                  alt: "パーク内レストランでのミッション記念写真（1）",
+                  caption: "彩り豊かなテーブルを囲んだディナーショット。",
+                },
+                {
+                  orderIndex: 3,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_5893.jpg",
+                  alt: "パーク内レストランでのミッション記念写真（2）",
+                  caption: "グラスを掲げた乾杯シーンの思い出。",
+                },
+              ],
+            },
+            missions: {
+              create: [
+                {
+                  title: "乾杯テーブルフォト",
+                  type: MissionType.PHOTO,
+                  description: "ディナーの乾杯シーンをセルフィーまたはタイマーで撮影。",
+                  rewardPoints: 45,
+                  photoPrompt: "グラス越しの笑顔が写るように角度を工夫してね。",
+                  checklistLabel: "乾杯写真を撮影",
+                },
+              ],
+            },
+          },
+          {
+            orderIndex: 9,
+            name: "オフィシャルホテル",
+            dayLabel: "Day 1",
+            dateLabel: "Oct 09",
+            time: "21:00",
+            location: "USJ オフィシャルホテル",
+            address: "6-2-52 Shimaya, Konohana Ward, Osaka",
+            note: "ロビーの装飾や客室ビューを確かめて、明日に備えよう。",
+            lat: 34.6545,
+            lng: 135.4332,
+            mapX: 18,
+            mapY: 20,
+            unlockRadiusMeters: 150,
+            arrivalPoints: 60,
+            headline: "ホテルで一日を振り返るしあわせ時間",
+            memoryBody: "撮った写真を眺めながら、ベスト3を選んでフォトアルバム案にしてみよう。",
+            prompt: "今日一番笑った瞬間をそれぞれ発表してみよう！",
+            message: "部屋に入ったら、ベッドにダイブする瞬間をタイマーで撮影しよう。",
+            photos: {
+              create: [
+                {
+                  orderIndex: 1,
+                  imageUrl: "/memories/レストラン.jpg",
+                  alt: "Hotel night view illustration",
+                  caption: "ホテルの窓から見える夜景をシェア",
+                },
+                {
+                  orderIndex: 2,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_5923 2.jpg",
+                  alt: "オフィシャルホテルでのミッション記念写真（1）",
+                  caption: "客室でまったり振り返ったアフターショット。",
+                },
+                {
+                  orderIndex: 3,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_5923.jpg",
+                  alt: "オフィシャルホテルでのミッション記念写真（2）",
+                  caption: "ベッドタイムのリラックス感を写したフォト。",
+                },
+              ],
+            },
+            missions: {
+              create: [
+                {
+                  title: "おやすみベッドダイブ",
+                  type: MissionType.PHOTO,
+                  description: "ベッドにダイブする瞬間をセルフタイマーで撮って、今日の締めに！",
+                  rewardPoints: 50,
+                  photoPrompt: "ジャンプの瞬間を狙って連写しよう。",
+                  checklistLabel: "ベッドダイブ写真を撮影",
+                },
+              ],
+            },
+          },
+          {
+            orderIndex: 10,
+            name: "万博エントランス",
+            dayLabel: "Day 2",
+            dateLabel: "Oct 10",
+            time: "10:00",
+            location: "大阪・関西万博 入場ゲート",
+            address: "1-5 Yumeshima, Konohana Ward, Osaka",
+            note: "未来感溢れるゲートで2日目の冒険をスタート。",
+            lat: 34.6644,
+            lng: 135.4075,
+            mapX: 70,
+            mapY: 30,
+            unlockRadiusMeters: 180,
+            arrivalPoints: 80,
+            headline: "未来の入り口で期待を高めて",
+            memoryBody: "大阪万博のニュースを見てワクワクしたあの日を思い出して、現地で体験を重ねよう。",
+            prompt: "気になるパビリオンをお互い3つ挙げて優先順位を決めよう！",
+            message: "ゲートの巨大ロゴの前で、2日目のスタートダッシュフォトを撮ろう。",
+            photos: {
+              create: [
+                {
+                  orderIndex: 1,
+                  imageUrl: "/memories/万博.png",
+                  alt: "Expo entrance gate illustration",
+                  caption: "万博ゲートで未来へのワンショット",
+                },
+                {
+                  orderIndex: 2,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_7500.jpg",
+                  alt: "万博エントランスでのミッション記念写真（1）",
+                  caption: "未来へのゲートで並んだスタートショット。",
+                },
+                {
+                  orderIndex: 3,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_7501.jpg",
+                  alt: "万博エントランスでのミッション記念写真（2）",
+                  caption: "ゲート前でハイタッチした記念写真。",
+                },
+              ],
+            },
+            missions: {
+              create: [
+                {
+                  title: "ゲートで未来宣言フォト",
+                  type: MissionType.PHOTO,
+                  description: "万博ロゴを背景に、未来へ向けたイメージポーズで写真を撮ろう。",
+                  rewardPoints: 70,
+                  photoPrompt: "手を前に伸ばしたり、ジャンプしてもOK！",
+                  checklistLabel: "万博ゲート写真を撮影",
+                },
+              ],
+            },
+          },
+          {
+            orderIndex: 11,
+            name: "未来パビリオン",
+            dayLabel: "Day 2",
+            dateLabel: "Oct 10",
+            time: "11:30",
+            location: "テーマパビリオンエリア",
+            address: "1-5 Yumeshima, Konohana Ward, Osaka",
+            note: "最新テクノロジーを体験しながら、未来のライフスタイルを想像。",
+            lat: 34.6648,
+            lng: 135.4088,
+            mapX: 76,
+            mapY: 36,
+            unlockRadiusMeters: 120,
+            arrivalPoints: 65,
+            headline: "未来のワクワクを記録しよう",
+            memoryBody: "家でよく語り合ったガジェット話を、目の前の本物でアップデート！",
+            prompt: "展示で気に入った技術やサービスを一つ選んで、おすすめポイントを語ろう。",
+            message: "目玉展示の前で記念写真を撮って、未来の自分たちにメッセージを残そう。",
+            photos: {
+              create: [
+                {
+                  orderIndex: 1,
+                  imageUrl: "/memories/パビリオン.jpg",
+                  alt: "Futuristic pavilion illustration",
+                  caption: "未来感あふれる展示物と一緒に",
+                },
+                {
+                  orderIndex: 2,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_7511.jpg",
+                  alt: "未来パビリオンでのミッション記念写真（1）",
+                  caption: "ハイテク展示に驚いた瞬間を残したショット。",
+                },
+                {
+                  orderIndex: 3,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_7564.jpg",
+                  alt: "未来パビリオンでのミッション記念写真（2）",
+                  caption: "未来ポーズを決めた記念フォト。",
+                },
+              ],
+            },
+            missions: {
+              create: [
+                {
+                  title: "目玉展示で未来ポーズ",
+                  type: MissionType.PHOTO,
+                  description: "気になった展示の前で、“未来を掴む”イメージのポーズで記念撮影。",
+                  rewardPoints: 60,
+                  photoPrompt: "片手を伸ばしてホログラムを触るイメージがオススメ。",
+                  checklistLabel: "未来展示写真を撮影",
+                },
+              ],
+            },
+          },
+          {
+            orderIndex: 12,
+            name: "コモンズ館",
+            dayLabel: "Day 2",
+            dateLabel: "Oct 10",
+            time: "13:30",
+            location: "コモンズ館エリア",
+            address: "1-5 Yumeshima, Konohana Ward, Osaka",
+            note: "サステナブルなアイデアを体験しながら、地球の未来に想いを馳せよう。",
+            lat: 34.6652,
+            lng: 135.4095,
+            mapX: 82,
+            mapY: 32,
+            unlockRadiusMeters: 120,
+            arrivalPoints: 60,
+            headline: "みんなでつくる未来を感じて",
+            memoryBody: "環境の話で盛り上がった日を思い出しながら、新しいヒントを見つけよう。",
+            prompt: "自分たちにできる“ちいさなサステナ行動”をひとつ決めてみよう！",
+            message: "緑があふれる展示の前で、優しい笑顔のツーショットを撮って記録に残そう。",
+            photos: {
+              create: [
+                {
+                  orderIndex: 1,
+                  imageUrl: "/memories/コモンズ.jpg",
+                  alt: "Commons pavilion greenery illustration",
+                  caption: "緑いっぱいの展示ゾーンで癒やしフォト",
+                },
+                {
+                  orderIndex: 2,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_7618.jpg",
+                  alt: "コモンズ館でのミッション記念写真（1）",
+                  caption: "緑のディスプレイを背にしたナチュラルショット。",
+                },
+                {
+                  orderIndex: 3,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_7953 2.jpg",
+                  alt: "コモンズ館でのミッション記念写真（2）",
+                  caption: "サステナブルな展示を眺めながらの笑顔フォト。",
+                },
+              ],
+            },
+            missions: {
+              create: [
+                {
+                  title: "グリーンウォールでエコフォト",
+                  type: MissionType.PHOTO,
+                  description: "植物ディスプレイ前で“地球を抱きしめる”ポーズを写真に収めよう。",
+                  rewardPoints: 55,
+                  photoPrompt: "手でハートを作ったり、肩を寄せ合って撮るとGOOD。",
+                  checklistLabel: "エコフォトを撮影",
+                },
+              ],
+            },
+          },
+          {
+            orderIndex: 13,
+            name: "ランチスポット（万博）",
+            dayLabel: "Day 2",
+            dateLabel: "Oct 10",
+            time: "15:00",
+            location: "万博グルメエリア",
+            address: "1-5 Yumeshima, Konohana Ward, Osaka",
+            note: "各国料理が集まるフードエリアで、味の旅を楽しもう。",
+            lat: 34.6641,
+            lng: 135.4062,
+            mapX: 78,
+            mapY: 42,
+            unlockRadiusMeters: 140,
+            arrivalPoints: 50,
+            headline: "世界のランチでひと休み",
+            memoryBody: "一緒に海外旅行を妄想したあの夜みたいに、味から旅を広げよう。",
+            prompt: "この場で食べてみたい国の料理を順番に指差しで選んでみよう！",
+            message: "色鮮やかなランチプレートを並べて、フードフラットレイを撮影しよう。",
+            photos: {
+              create: [
+                {
+                  orderIndex: 1,
+                  imageUrl: "/memories/レストラン.jpg",
+                  alt: "Colorful food market illustration",
+                  caption: "ランチの彩りを俯瞰で切り取ろう",
+                },
+                {
+                  orderIndex: 2,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_7953.jpg",
+                  alt: "万博ランチスポットでのミッション記念写真（1）",
+                  caption: "各国グルメを並べたテーブルショット。",
+                },
+                {
+                  orderIndex: 3,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_8644.jpg",
+                  alt: "万博ランチスポットでのミッション記念写真（2）",
+                  caption: "おいしい笑顔がそろったランチタイムの一枚。",
+                },
+              ],
+            },
+            missions: {
+              create: [
+                {
+                  title: "世界グルメフラットレイ",
+                  type: MissionType.PHOTO,
+                  description: "テーブルに並べた料理を真上から撮影。お互いの手も写るようにするとステキ！",
+                  rewardPoints: 45,
+                  photoPrompt: "ナイフとフォーク、グラスも写すと雰囲気アップ。",
+                  checklistLabel: "ランチ写真を撮影",
+                },
+              ],
+            },
+          },
+          {
+            orderIndex: 14,
+            name: "モーニングタイム",
+            dayLabel: "Day 3",
+            dateLabel: "Oct 11",
+            time: "08:30",
+            location: "ホテルレストラン",
+            address: "6-2-52 Shimaya, Konohana Ward, Osaka",
+            note: "旅の最終日は、ゆったりモーニングでスタート。",
+            lat: 34.6548,
+            lng: 135.4335,
+            mapX: 16,
+            mapY: 14,
+            unlockRadiusMeters: 150,
+            arrivalPoints: 40,
+            headline: "朝日を浴びて気分をリセット",
+            memoryBody: "お互いに“今日のテーマカラー”を決めて、朝の光で撮影を楽しもう。",
+            prompt: "最終日にやりたいこと・買いたいものを朝のうちに宣言しておこう！",
+            message: "朝食プレートと一緒に、まだ眠たい顔のままでもOKなモーニングフォトを残そう。",
+            photos: {
+              create: [
+                {
+                  orderIndex: 1,
+                  imageUrl: "/memories/モーニング.AVIF",
+                  alt: "Morning breakfast illustration",
+                  caption: "朝食プレートと一緒におはようフォト",
+                },
+                {
+                  orderIndex: 2,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_8719.jpg",
+                  alt: "モーニングタイムでのミッション記念写真（1）",
+                  caption: "朝の光を浴びながら撮ったすっきりショット。",
+                },
+                {
+                  orderIndex: 3,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_8981.jpg",
+                  alt: "モーニングタイムでのミッション記念写真（2）",
+                  caption: "最終日の朝を噛みしめた記念フォト。",
+                },
+              ],
+            },
+            missions: {
+              create: [
+                {
+                  title: "おはようブレックファストショット",
+                  type: MissionType.PHOTO,
+                  description: "モーニングプレートを片手に、“いただきます”ポーズで写真を撮ろう。",
+                  rewardPoints: 40,
+                  photoPrompt: "カップから立ち上る湯気も写ると雰囲気アップ。",
+                  checklistLabel: "朝食写真を撮影",
+                },
+              ],
+            },
+          },
+          {
+            orderIndex: 15,
+            name: "ショッピング（梅田）",
+            dayLabel: "Day 3",
+            dateLabel: "Oct 11",
+            time: "12:30",
+            location: "梅田エリア",
+            address: "1-1 Ofukacho, Kita Ward, Osaka",
+            note: "旅の締めは梅田でお買い物。お土産と未来の計画を探そう。",
+            lat: 34.7056,
+            lng: 135.4982,
+            mapX: 58,
+            mapY: 12,
+            unlockRadiusMeters: 200,
+            arrivalPoints: 70,
+            headline: "戦利品と笑顔でフィナーレ",
+            memoryBody: "旅の思い出を持ち帰るだけでなく、未来の計画もひとつふたりで決めちゃおう。",
+            prompt: "お互いにサプライズで買いたいものを1個考えてみよう！",
+            message: "ショッパーを両手に持って、今日の戦利品フォトで締めくくり。",
+            photos: {
+              create: [
+                {
+                  orderIndex: 1,
+                  imageUrl: "/memories/gion-3.svg",
+                  alt: "Shopping street illustration",
+                  caption: "ショッピング袋を手にハッピーエンドショット",
+                },
+                {
+                  orderIndex: 2,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_8990.jpg",
+                  alt: "梅田ショッピングでのミッション記念写真（1）",
+                  caption: "ショッピング袋を掲げた満足げなツーショット。",
+                },
+                {
+                  orderIndex: 3,
+                  imageUrl: "/memories/HEIFtoJPEG/IMG_9673.jpg",
+                  alt: "梅田ショッピングでのミッション記念写真（2）",
+                  caption: "戦利品を広げて振り返ったラストショット。",
+                },
+              ],
+            },
+            missions: {
+              create: [
+                {
+                  title: "戦利品ショッパーフォト",
+                  type: MissionType.PHOTO,
+                  description: "ショッピング袋を手に、満足げな笑顔でツーショットを撮影！",
+                  rewardPoints: 60,
+                  photoPrompt: "購入したものをちらっと覗かせる演出も◎。",
+                  checklistLabel: "ショッピング写真を撮影",
+                },
+              ],
+            },
           },
         ],
       },
-      insuranceHistories: {
-        create: [
-          {
-            insuranceType: 'HEALTH',
-            status: 'ENROLLED',
-            effectiveDate: new Date('2020-04-01'),
-            standardRemuneration: new Prisma.Decimal(300000),
-          },
-          {
-            insuranceType: 'PENSION',
-            status: 'ENROLLED',
-            effectiveDate: new Date('2020-04-01'),
-            standardRemuneration: new Prisma.Decimal(300000),
-          },
-        ],
-      },
-    },
-    include: {
-      socialInsuranceProfile: true,
-      taxProfile: true,
     },
   });
-
-  const commuteItemId = await getItemId('COMMUTE_ALLOWANCE');
-  const housingItemId = await getItemId('HOUSING_ALLOWANCE');
-
-  await prisma.employeeAllowance.createMany({
-    data: [
-      {
-        employeeId: employee.id,
-        itemId: commuteItemId,
-        amount: new Prisma.Decimal(20000),
-        frequency: 'MONTHLY',
-        taxableOverride: false,
-        socialInsuranceOverride: false,
-        startDate: new Date('2020-04-01'),
-      },
-      {
-        employeeId: employee.id,
-        itemId: housingItemId,
-        amount: new Prisma.Decimal(30000),
-        frequency: 'MONTHLY',
-        startDate: new Date('2020-04-01'),
-      },
-    ],
-  });
-
-  await prisma.taxWithholdingHistory.create({
-    data: {
-      employeeId: employee.id,
-      tableType: 'MONTHLY',
-      dependents: 1,
-      taxableIncome: new Prisma.Decimal(300000),
-      taxWithheld: new Prisma.Decimal(8000),
-      effectiveDate: new Date('2024-04-01'),
-    },
-  });
-
-  await prisma.monthlyRemunerationSnapshot.createMany({
-    data: [
-      {
-        employeeId: employee.id,
-        year: 2024,
-        month: 4,
-        totalDays: 20,
-        totalHours: new Prisma.Decimal(160),
-        baseSalary: new Prisma.Decimal(300000),
-        allowanceTotal: new Prisma.Decimal(50000),
-        overtimeTotal: new Prisma.Decimal(10000),
-        taxableIncome: new Prisma.Decimal(360000),
-        socialInsuranceTotal: new Prisma.Decimal(60000),
-        standardMonthlyRemuneration: new Prisma.Decimal(350000),
-      },
-      {
-        employeeId: employee.id,
-        year: 2024,
-        month: 5,
-        totalDays: 20,
-        totalHours: new Prisma.Decimal(160),
-        baseSalary: new Prisma.Decimal(300000),
-        allowanceTotal: new Prisma.Decimal(50000),
-        overtimeTotal: new Prisma.Decimal(12000),
-        taxableIncome: new Prisma.Decimal(362000),
-        socialInsuranceTotal: new Prisma.Decimal(60000),
-        standardMonthlyRemuneration: new Prisma.Decimal(350000),
-      },
-      {
-        employeeId: employee.id,
-        year: 2024,
-        month: 6,
-        totalDays: 20,
-        totalHours: new Prisma.Decimal(160),
-        baseSalary: new Prisma.Decimal(300000),
-        allowanceTotal: new Prisma.Decimal(50000),
-        overtimeTotal: new Prisma.Decimal(8000),
-        taxableIncome: new Prisma.Decimal(358000),
-        socialInsuranceTotal: new Prisma.Decimal(60000),
-        standardMonthlyRemuneration: new Prisma.Decimal(350000),
-      },
-    ],
-  });
-
-  const residentNotice = await prisma.residentTaxNotice.create({
-    data: {
-      employeeId: employee.id,
-      fiscalYear: 2024,
-      startMonth: 6,
-      annualTax: new Prisma.Decimal(96000),
-      bonusWithholding: new Prisma.Decimal(20000),
-      remarks: 'サンプルデータ',
-    },
-  });
-
-  await prisma.employeePayrollMaster.create({
-    data: {
-      employeeId: employee.id,
-      baseSalary: new Prisma.Decimal(300000),
-      overtimeDivisor: 160,
-      overtimeMultiplier: new Prisma.Decimal(1.25),
-      socialInsuranceProfileId: employee.socialInsuranceProfile?.id,
-      taxProfileId: employee.taxProfile?.id,
-      residentTaxNoticeId: residentNotice.id,
-    },
-  });
-
-  const monthlyShare = 96000 - 20000;
-  const monthlyAmount = Math.floor(monthlyShare / 12);
-  const remainder = monthlyShare - monthlyAmount * 12;
-
-  for (let i = 0; i < 12; i += 1) {
-    const month = ((6 - 1 + i) % 12) + 1;
-    const yearOffset = month >= 6 ? 0 : 1;
-    const extra = i < remainder ? 1 : 0;
-    await prisma.residentTaxAllocation.create({
-      data: {
-        noticeId: residentNotice.id,
-        month,
-        year: 2024 + yearOffset,
-        baseAmount: new Prisma.Decimal(monthlyAmount + extra),
-        payRunType: 'REGULAR',
-      },
-    });
-  }
-
-  await prisma.residentTaxAllocation.create({
-    data: {
-      noticeId: residentNotice.id,
-      month: 6,
-      year: 2024,
-      baseAmount: new Prisma.Decimal(0),
-      bonusAmount: new Prisma.Decimal(20000),
-      payRunType: 'BONUS',
-    },
-  });
-
-  console.log('Seed completed');
-}
-
-async function getItemId(code: string) {
-  const item = await prisma.payrollItemDefinition.findUnique({ where: { code } });
-  if (!item) throw new Error(`PayrollItemDefinition ${code} not found`);
-  return item.id;
 }
 
 main()

@@ -20,24 +20,10 @@
     "incremental": true,
     "baseUrl": "./",
     "paths": {
-      "@/app/*": [
-        "src/app/*"
-      ],
-      "@/lib/*": [
-        "src/lib/*"
-      ],
-      "@/types/*": [
-        "src/types/*"
-      ],
-      "@/domain/*": [
-        "src/domain/*"
-      ],
-      "@/application/*": [
-        "src/application/*"
-      ],
-      "@/infrastructure/*": [
-        "src/infrastructure/*"
-      ]
+      "@/app/*": ["src/app/*"],
+      "@/components/*": ["src/components/*"],
+      "@/data/*": ["src/data/*"],
+      "@/lib/*": ["src/lib/*"]
     },
     "plugins": [
       {
