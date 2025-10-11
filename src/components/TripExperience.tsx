@@ -20,6 +20,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { TripMission, TripPlan, TripSpot } from "@/data/tripPlan";
 import { TripMap } from "@/components/TripMap";
 import { MemoryGallery } from "@/components/MemoryGallery";
+import { resolveSpotIcon } from "@/data/spotIcons";
 
 type GeoStatus = "idle" | "tracking" | "denied" | "unsupported";
 
@@ -124,6 +125,13 @@ function TripExperienceInner({ plan }: { plan: TripPlan }) {
   const skipNextPersistRef = useRef(true);
   const previousUnlocked = useRef<Set<string>>(new Set());
   const [viewMode, setViewMode] = useState<"map" | "spots">("map");
+  const hasProgress = useMemo(() => {
+    return (
+      manualUnlocks.size > 0 ||
+      awardedArrivals.size > 0 ||
+      completedMissions.size > 0
+    );
+  }, [awardedArrivals, completedMissions, manualUnlocks]);
 
   const totalPotentialPoints = useMemo(() => {
     return rawSpots.reduce((sum, spot) => {
@@ -369,6 +377,27 @@ function TripExperienceInner({ plan }: { plan: TripPlan }) {
     },
     [],
   );
+  const handleResetProgress = useCallback(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    if (hasProgress) {
+      const confirmed = window.confirm(
+        "進行状況をリセットしますか？ポイントとミッション達成状況がすべてクリアされます。",
+      );
+      if (!confirmed) {
+        return;
+      }
+    }
+    setManualUnlocks(new Set());
+    setAwardedArrivals(new Set());
+    setCompletedMissions(new Set());
+    setRecentlyUnlocked(new Set());
+    previousUnlocked.current = new Set();
+    setActiveSpotId(orderedSpots[0]?.id ?? "no-spots");
+    skipNextPersistRef.current = true;
+    window.localStorage.removeItem(storageKey);
+  }, [hasProgress, orderedSpots, storageKey]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -536,6 +565,16 @@ function TripExperienceInner({ plan }: { plan: TripPlan }) {
               </span>
             </div>
           </div>
+          <div className="scoreboard__actions">
+            <button
+              type="button"
+              className="scoreboard__reset"
+              onClick={handleResetProgress}
+              disabled={!hasProgress}
+            >
+              進行状況をリセット
+            </button>
+          </div>
         </div>
         <div className="hero__art">
           <img
@@ -639,7 +678,8 @@ function TripExperienceInner({ plan }: { plan: TripPlan }) {
                       spot.name.trim().charAt(0) ||
                       "★"
                     ).slice(0, 3);
-                    const timelineImage = spot.photos[0]?.src;
+                    const timelineImage =
+                      resolveSpotIcon(spot.name) ?? spot.photos[0]?.src;
 
                     return (
                       <SortableTimelineItem
