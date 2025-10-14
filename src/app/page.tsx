@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { TripExperience } from "@/components/TripExperience";
 import { getTripPlan } from "@/data/tripPlan";
 

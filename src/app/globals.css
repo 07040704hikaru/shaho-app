@@ -31,11 +31,13 @@
 body {
   margin: 0;
   min-height: 100vh;
+  min-height: 100dvh;
   background: radial-gradient(circle at 20% 20%, #fbfdff 0%, #eef3ff 60%);
 }
 
 .page {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   justify-content: center;
   padding: 48px 24px 64px;
@@ -192,6 +194,32 @@ body {
   transition: width 0.4s ease;
 }
 
+.scoreboard__actions {
+  margin-top: 12px;
+}
+
+.scoreboard__reset {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 1.4;
+  border: 1px solid rgba(86, 111, 255, 0.3);
+  background: rgba(255, 255, 255, 0.9);
+  color: #4451a8;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.scoreboard__reset:hover:not(:disabled) {
+  background: rgba(86, 111, 255, 0.12);
+  color: #2c3f9f;
+  border-color: rgba(86, 111, 255, 0.5);
+}
+
+.scoreboard__reset:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .hero__art {
   display: flex;
   justify-content: center;
@@ -345,6 +373,13 @@ body {
 .trip-map__marker span {
   position: relative;
   top: -1px;
+}
+
+.trip-map__marker img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 .trip-map__marker--unlocked {
@@ -933,6 +968,150 @@ body {
 .spot-detail__prompt p {
   margin: 0;
   line-height: 1.6;
+}
+
+.spot-detail__message-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.spot-detail__edit-button {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 1.4;
+  border: 1px solid rgba(86, 111, 255, 0.35);
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--accent);
+  transition: background 0.2s ease, border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.spot-detail__edit-button:hover {
+  background: rgba(86, 111, 255, 0.12);
+  border-color: rgba(86, 111, 255, 0.55);
+}
+
+.spot-detail__message-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.spot-detail__editor {
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 14px;
+  background: rgba(247, 249, 255, 0.9);
+  border: 1px solid rgba(86, 111, 255, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.spot-detail__editor-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.spot-detail__editor-field textarea,
+.spot-detail__editor-field input {
+  font-size: 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(86, 111, 255, 0.2);
+  padding: 8px 10px;
+  background: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.spot-detail__editor-field textarea:focus,
+.spot-detail__editor-field input:focus {
+  outline: none;
+  border-color: rgba(86, 111, 255, 0.55);
+  box-shadow: 0 0 0 3px rgba(86, 111, 255, 0.14);
+}
+
+.spot-detail__editor-photos {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.spot-detail__editor-photo-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(86, 111, 255, 0.12);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+}
+
+.spot-detail__editor-field--inline span {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.spot-detail__editor-caption span {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.spot-detail__editor-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.spot-detail__editor-save,
+.spot-detail__editor-cancel,
+.spot-detail__editor-reset {
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  line-height: 1.4;
+  border: 1px solid transparent;
+  transition: background 0.2s ease, border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.spot-detail__editor-save {
+  background: linear-gradient(135deg, #4f64ff 0%, #9c5bff 100%);
+  color: #fff;
+  border-color: transparent;
+}
+
+.spot-detail__editor-save:hover {
+  filter: brightness(1.05);
+}
+
+.spot-detail__editor-cancel {
+  background: rgba(255, 255, 255, 0.92);
+  border-color: rgba(86, 111, 255, 0.25);
+  color: var(--accent);
+}
+
+.spot-detail__editor-cancel:hover {
+  background: rgba(86, 111, 255, 0.12);
+  border-color: rgba(86, 111, 255, 0.45);
+}
+
+.spot-detail__editor-reset {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: rgba(238, 68, 95, 0.35);
+  color: #e84b68;
+}
+
+.spot-detail__editor-reset:hover {
+  background: rgba(237, 87, 122, 0.15);
+  border-color: rgba(237, 87, 122, 0.55);
 }
 
 .spot-missions {

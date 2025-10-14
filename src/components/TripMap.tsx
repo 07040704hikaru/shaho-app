@@ -6,6 +6,7 @@ import { Circle, MapContainer, Marker, TileLayer, Tooltip } from "react-leaflet"
 import type { LatLngBoundsExpression, DivIcon } from "leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { resolveSpotIcon } from "@/data/spotIcons";
 
 interface TripMapProps {
   spots: TripSpot[];
@@ -21,6 +22,7 @@ type LatLngTuple = [number, number];
 
 function createMarkerIcon(
   label: string,
+  iconUrl: string | undefined,
   {
     unlocked,
     active,
@@ -47,10 +49,13 @@ function createMarkerIcon(
     return entities[char] ?? char;
   });
   const display = safeLabel.trim() || "★";
+  const markerHtml = iconUrl
+    ? `<img src="${iconUrl}" alt="${display}" />`
+    : `<span>${display}</span>`;
 
   return L.divIcon({
     className: classes,
-    html: `<span>${display}</span>`,
+    html: markerHtml,
     iconSize: [34, 34],
     iconAnchor: [17, 34],
     popupAnchor: [0, -36],
@@ -181,6 +186,10 @@ export function TripMap({
               spot.coordinates.lng,
             ];
             const markerLabel = resolveLabel(spot);
+            const iconPath =
+              customLabels[spot.id]?.trim() ?
+                undefined
+              : resolveSpotIcon(spot.name);
 
             return (
               <Fragment key={spot.id}>
@@ -200,7 +209,7 @@ export function TripMap({
                 />
                 <Marker
                   position={position}
-                  icon={createMarkerIcon(markerLabel, {
+                  icon={createMarkerIcon(markerLabel, iconPath, {
                     unlocked,
                     active,
                     unlocking,

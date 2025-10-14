@@ -20,14 +20,25 @@ type SpotRecord = TripRecord["spots"][number];
 type PhotoRecord = SpotRecord["photos"][number];
 type MissionRecord = SpotRecord["missions"][number];
 
+const LEGACY_IMAGE_RENAMES: Record<string, string> = {
+  "/memories/HEIFtoJPEG/IMG_0490 2.jpg": "/memories/HEIFtoJPEG/img-0490-2.jpg",
+  "/memories/HEIFtoJPEG/IMG_0490 3.jpg": "/memories/HEIFtoJPEG/img-0490-3.jpg",
+  "/memories/HEIFtoJPEG/IMG_1876 2.jpg": "/memories/HEIFtoJPEG/img-1876-2.jpg",
+  "/memories/HEIFtoJPEG/IMG_1890 2.jpg": "/memories/HEIFtoJPEG/img-1890-2.jpg",
+  "/memories/HEIFtoJPEG/IMG_4856 2.jpg": "/memories/HEIFtoJPEG/img-4856-2.jpg",
+  "/memories/HEIFtoJPEG/IMG_5923 2.jpg": "/memories/HEIFtoJPEG/img-5923-2.jpg",
+  "/memories/HEIFtoJPEG/IMG_7953 2.jpg": "/memories/HEIFtoJPEG/img-7953-2.jpg",
+};
+
 function normalizeImageUrl(url: string): string {
   if (!url) {
     return url;
   }
-  return url
+  const withLowerExt = url
     .replace(/\.JPG$/i, ".jpg")
     .replace(/\.JPEG$/i, ".jpeg")
     .replace(/\.PNG$/i, ".png");
+  return LEGACY_IMAGE_RENAMES[withLowerExt] ?? withLowerExt;
 }
 
 export interface TripPhoto {

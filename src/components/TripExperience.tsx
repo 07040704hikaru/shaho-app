@@ -16,11 +16,34 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { TripMission, TripPlan, TripSpot } from "@/data/tripPlan";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FormEvent,
+  type MouseEvent,
+  type TouchEvent,
+  type PointerEvent,
+  type SyntheticEvent,
+} from "react";
+import { TripMission, TripPhoto, TripPlan, TripSpot } from "@/data/tripPlan";
 import { TripMap } from "@/components/TripMap";
 import { MemoryGallery } from "@/components/MemoryGallery";
-import { resolveSpotIcon } from "@/data/spotIcons";
+import { resolveSpotIcon, resolveSpotMemoryPhoto } from "@/data/spotIcons";
+
+const MAX_CUSTOM_PHOTOS = 3;
+type CustomPhotoEntry = { src: string; caption?: string };
+type PhotoDraft = { src: string; caption: string };
+
+function suppressEventPropagation(event: SyntheticEvent) {
+  event.stopPropagation();
+  const nativeEvent = event.nativeEvent as {
+    stopImmediatePropagation?: () => void;
+  };
+  nativeEvent.stopImmediatePropagation?.();
+}
 
 type GeoStatus = "idle" | "tracking" | "denied" | "unsupported";
 
@@ -38,6 +61,8 @@ interface PersistedTripProgress {
   manualUnlocks?: string[];
   completedMissions?: string[];
   awardedArrivals?: string[];
+  customMessages?: Record<string, string>;
+  customPhotos?: Record<string, Array<CustomPhotoEntry | string>>;
   version?: number;
 }
 
@@ -117,6 +142,14 @@ function TripExperienceInner({ plan }: { plan: TripPlan }) {
   const [completedMissions, setCompletedMissions] = useState<Set<string>>(
     () => new Set(),
   );
+  const [customMessages, setCustomMessages] = useState<Record<string, string>>(
+    () => ({}),
+  );
+  const [customPhotos, setCustomPhotos] = useState<
+    Record<string, CustomPhotoEntry[]>
+  >(
+    () => ({}),
+  );
   const storageKey = useMemo(
     () => `trip-progress-${plan.id}`,
     [plan.id],
@@ -129,9 +162,17 @@ function TripExperienceInner({ plan }: { plan: TripPlan }) {
     return (
       manualUnlocks.size > 0 ||
       awardedArrivals.size > 0 ||
-      completedMissions.size > 0
+      completedMissions.size > 0 ||
+      Object.keys(customMessages).length > 0 ||
+      Object.values(customPhotos).some((photos) => photos.length > 0)
     );
-  }, [awardedArrivals, completedMissions, manualUnlocks]);
+  }, [
+    awardedArrivals,
+    completedMissions,
+    customMessages,
+    customPhotos,
+    manualUnlocks,
+  ]);
 
   const totalPotentialPoints = useMemo(() => {
     return rawSpots.reduce((sum, spot) => {
@@ -377,6 +418,68 @@ function TripExperienceInner({ plan }: { plan: TripPlan }) {
     },
     [],
   );
+  const handleSaveCustomContent = useCallback(
+    (
+      spotId: string,
+      { message, photos }: { message: string; photos: CustomPhotoEntry[] },
+    ) => {
+      setCustomMessages((prev) => {
+        const trimmed = message.trim();
+        if (!trimmed && !(spotId in prev)) {
+          return prev;
+        }
+        const next = { ...prev };
+        if (trimmed) {
+          next[spotId] = trimmed;
+        } else {
+          delete next[spotId];
+        }
+        return next;
+      });
+      setCustomPhotos((prev) => {
+        const cleaned = photos
+          .map((photo) => {
+            const src = photo.src.trim();
+            const caption = photo.caption?.trim();
+            if (!src) {
+              return null;
+            }
+            return caption ? { src, caption } : { src };
+          })
+          .filter((photo): photo is CustomPhotoEntry => Boolean(photo))
+          .slice(0, MAX_CUSTOM_PHOTOS);
+        if (!cleaned.length && !(spotId in prev)) {
+          return prev;
+        }
+        const next = { ...prev };
+        if (cleaned.length) {
+          next[spotId] = cleaned;
+        } else {
+          delete next[spotId];
+        }
+        return next;
+      });
+    },
+    [],
+  );
+  const handleResetCustomContent = useCallback((spotId: string) => {
+    setCustomMessages((prev) => {
+      if (!(spotId in prev)) {
+        return prev;
+      }
+      const next = { ...prev };
+      delete next[spotId];
+      return next;
+    });
+    setCustomPhotos((prev) => {
+      if (!(spotId in prev)) {
+        return prev;
+      }
+      const next = { ...prev };
+      delete next[spotId];
+      return next;
+    });
+  }, []);
   const handleResetProgress = useCallback(() => {
     if (typeof window === "undefined") {
       return;
@@ -393,6 +496,8 @@ function TripExperienceInner({ plan }: { plan: TripPlan }) {
     setAwardedArrivals(new Set());
     setCompletedMissions(new Set());
     setRecentlyUnlocked(new Set());
+    setCustomMessages({});
+    setCustomPhotos({});
     previousUnlocked.current = new Set();
     setActiveSpotId(orderedSpots[0]?.id ?? "no-spots");
     skipNextPersistRef.current = true;
@@ -413,6 +518,8 @@ function TripExperienceInner({ plan }: { plan: TripPlan }) {
         setManualUnlocks(new Set());
         setAwardedArrivals(new Set());
         setCompletedMissions(new Set());
+        setCustomMessages({});
+        setCustomPhotos({});
         return;
       }
 
@@ -421,6 +528,8 @@ function TripExperienceInner({ plan }: { plan: TripPlan }) {
         setManualUnlocks(new Set());
         setAwardedArrivals(new Set());
         setCompletedMissions(new Set());
+        setCustomMessages({});
+        setCustomPhotos({});
         return;
       }
 
@@ -449,11 +558,84 @@ function TripExperienceInner({ plan }: { plan: TripPlan }) {
       setManualUnlocks(new Set(manualUnlockArray));
       setAwardedArrivals(new Set(awardedArrivalArray));
       setCompletedMissions(new Set(completedMissionArray));
+
+      const messageEntries =
+        parsed.customMessages && typeof parsed.customMessages === "object"
+          ? Object.entries(parsed.customMessages).reduce<[string, string][]>(
+              (acc, [spotId, message]) => {
+                if (
+                  typeof spotId === "string" &&
+                  typeof message === "string" &&
+                  validSpotIds.has(spotId)
+                ) {
+                  const trimmed = message.trim();
+                  if (trimmed) {
+                    acc.push([spotId, trimmed]);
+                  }
+                }
+                return acc;
+              },
+              [],
+            )
+          : [];
+
+      const photoEntries =
+        parsed.customPhotos && typeof parsed.customPhotos === "object"
+          ? Object.entries(parsed.customPhotos).reduce<
+              [string, CustomPhotoEntry[]][]
+            >((acc, [spotId, entries]) => {
+              if (
+                typeof spotId !== "string" ||
+                !validSpotIds.has(spotId) ||
+                !Array.isArray(entries)
+              ) {
+                return acc;
+              }
+              const cleaned = entries
+                .map((entry) => {
+                  if (typeof entry === "string") {
+                    const src = entry.trim();
+                    return src ? { src } : null;
+                  }
+                  if (entry && typeof entry === "object") {
+                    const rawSrc = (entry as { src?: unknown }).src;
+                    const src =
+                      typeof rawSrc === "string" ? rawSrc.trim() : "";
+                    const rawCaption = (entry as { caption?: unknown }).caption;
+                    const caption =
+                      typeof rawCaption === "string" ? rawCaption.trim() : "";
+                    if (!src) {
+                      return null;
+                    }
+                    return caption ? { src, caption } : { src };
+                  }
+                  return null;
+                })
+                .filter((entry): entry is CustomPhotoEntry => Boolean(entry))
+                .slice(0, MAX_CUSTOM_PHOTOS);
+              if (cleaned.length) {
+                acc.push([
+                  spotId,
+                  cleaned.map((photo) =>
+                    photo.caption
+                      ? { src: photo.src, caption: photo.caption }
+                      : { src: photo.src },
+                  ),
+                ]);
+              }
+              return acc;
+            }, [])
+          : [];
+
+      setCustomMessages(Object.fromEntries(messageEntries));
+      setCustomPhotos(Object.fromEntries(photoEntries));
     } catch (error) {
       console.warn("旅の進行状況を読み込めませんでした。", error);
       setManualUnlocks(new Set());
       setAwardedArrivals(new Set());
       setCompletedMissions(new Set());
+      setCustomMessages({});
+      setCustomPhotos({});
     } finally {
       stateHydratedRef.current = true;
     }
@@ -473,11 +655,38 @@ function TripExperienceInner({ plan }: { plan: TripPlan }) {
     }
 
     const payload: PersistedTripProgress = {
-      version: 1,
+      version: 3,
       manualUnlocks: Array.from(manualUnlocks),
       completedMissions: Array.from(completedMissions),
       awardedArrivals: Array.from(awardedArrivals),
     };
+    if (Object.keys(customMessages).length > 0) {
+      payload.customMessages = { ...customMessages };
+    }
+    if (Object.keys(customPhotos).length > 0) {
+      const serialized = Object.entries(customPhotos).reduce<
+        Record<string, CustomPhotoEntry[]>
+      >((acc, [spotId, photos]) => {
+        const cleaned = photos
+          .map((photo) => {
+            const src = photo.src.trim();
+            const caption = photo.caption?.trim();
+            if (!src) {
+              return null;
+            }
+            return caption ? { src, caption } : { src };
+          })
+          .filter((photo): photo is CustomPhotoEntry => Boolean(photo))
+          .slice(0, MAX_CUSTOM_PHOTOS);
+        if (cleaned.length) {
+          acc[spotId] = cleaned;
+        }
+        return acc;
+      }, {});
+      if (Object.keys(serialized).length > 0) {
+        payload.customPhotos = serialized;
+      }
+    }
 
     try {
       window.localStorage.setItem(storageKey, JSON.stringify(payload));
@@ -487,6 +696,8 @@ function TripExperienceInner({ plan }: { plan: TripPlan }) {
   }, [
     awardedArrivals,
     completedMissions,
+    customMessages,
+    customPhotos,
     manualUnlocks,
     storageKey,
   ]);
@@ -678,13 +889,44 @@ function TripExperienceInner({ plan }: { plan: TripPlan }) {
                       spot.name.trim().charAt(0) ||
                       "★"
                     ).slice(0, 3);
-                    const timelineImage =
-                      resolveSpotIcon(spot.name) ?? spot.photos[0]?.src;
+                    const customMessage = customMessages[spot.id];
+                    const customPhotoEntries = customPhotos[spot.id] ?? [];
+                    const validCustomPhotos = customPhotoEntries.filter(
+                      (entry) => entry.src,
+                    );
+                    const displayPhotos = validCustomPhotos.length
+                      ? validCustomPhotos.map((photo, index) => ({
+                          id: `custom-${spot.id}-${index}`,
+                          src: photo.src,
+                          alt:
+                            photo.caption ??
+                            `${spot.name} カスタム写真 ${index + 1}`,
+                          caption: photo.caption ?? undefined,
+                        }))
+                      : spot.photos;
+                    const augmentedSpot: TripSpot = {
+                      ...spot,
+                      memory: {
+                        ...spot.memory,
+                        message:
+                          customMessage && customMessage.trim()
+                            ? customMessage.trim()
+                            : spot.memory.message,
+                      },
+                      photos: displayPhotos,
+                    };
+                    const iconImage = resolveSpotIcon(spot.name);
+                    const fallbackThumbnail =
+                      resolveSpotMemoryPhoto(spot.name) ??
+                      displayPhotos[0]?.src ??
+                      spot.photos[0]?.src ??
+                      iconImage;
+                    const timelineImage = iconImage ?? fallbackThumbnail;
 
                     return (
                       <SortableTimelineItem
                         key={spot.id}
-                        spot={spot}
+                        spot={augmentedSpot}
                         isActive={isActive}
                         unlocked={unlocked}
                         unlocking={unlocking}
@@ -697,6 +939,14 @@ function TripExperienceInner({ plan }: { plan: TripPlan }) {
                         completedMissionIds={completedMissions}
                         timelineLabel={timelineLabel}
                         timelineImage={timelineImage}
+                        defaultMessage={spot.memory.message}
+                        defaultPhotos={spot.photos}
+                        customMessage={customMessage}
+                        customPhotos={validCustomPhotos}
+                        onSaveContent={(payload) =>
+                          handleSaveCustomContent(spot.id, payload)
+                        }
+                        onResetContent={() => handleResetCustomContent(spot.id)}
                       />
                     );
                   })}
@@ -733,6 +983,11 @@ export function TripExperience({ plan }: TripExperienceProps) {
   return <TripExperienceInner plan={plan} />;
 }
 
+type SpotContentPayload = {
+  message: string;
+  photos: CustomPhotoEntry[];
+};
+
 interface SortableTimelineItemProps {
   spot: TripSpot;
   isActive: boolean;
@@ -747,6 +1002,12 @@ interface SortableTimelineItemProps {
   completedMissionIds: Set<string>;
   timelineLabel: string;
   timelineImage?: string;
+  defaultMessage: string;
+  defaultPhotos: TripPhoto[];
+  customMessage?: string;
+  customPhotos: CustomPhotoEntry[];
+  onSaveContent: (payload: SpotContentPayload) => void;
+  onResetContent: () => void;
 }
 
 function SortableTimelineItem({
@@ -763,6 +1024,12 @@ function SortableTimelineItem({
   completedMissionIds,
   timelineLabel,
   timelineImage,
+  defaultMessage,
+  defaultPhotos,
+  customMessage,
+  customPhotos,
+  onSaveContent,
+  onResetContent,
 }: SortableTimelineItemProps) {
   const {
     attributes,
@@ -783,7 +1050,27 @@ function SortableTimelineItem({
   const indexClass = timelineImage
     ? "timeline__index timeline__index--photo"
     : "timeline__index";
-  const indexStyle = timelineImage ? { backgroundImage: `url(${timelineImage})` } : undefined;
+  const indexStyle = timelineImage
+    ? { backgroundImage: `url(${timelineImage})` }
+    : undefined;
+  const suppressPropagation = useCallback(suppressEventPropagation, []);
+  const handleManualToggle = useCallback(
+    (
+      event:
+        | MouseEvent<HTMLButtonElement>
+        | TouchEvent<HTMLButtonElement>
+        | PointerEvent<HTMLButtonElement>,
+    ) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const nativeEvent = event.nativeEvent as {
+        stopImmediatePropagation?: () => void;
+      };
+      nativeEvent.stopImmediatePropagation?.();
+      onToggleManual(spot.id);
+    },
+    [onToggleManual, spot.id],
+  );
 
   return (
     <li
@@ -843,8 +1130,11 @@ function SortableTimelineItem({
           <div className="timeline__actions">
             <button
               className="timeline__simulate"
-              onClick={() => onToggleManual(spot.id)}
               type="button"
+              onClick={handleManualToggle}
+              onMouseDown={suppressPropagation}
+              onPointerDown={suppressPropagation}
+              onTouchStart={suppressPropagation}
             >
               {manualUnlocked ? "ロックを戻す" : "解放をシミュレート"}
             </button>
@@ -858,40 +1148,72 @@ function SortableTimelineItem({
               arrivalAwarded={arrivalAwarded}
               onMissionComplete={onMissionComplete}
               completedMissionIds={completedMissionIds}
+              defaultMessage={defaultMessage}
+              defaultPhotos={defaultPhotos}
+              customMessage={customMessage}
+              customPhotos={customPhotos}
+              onSaveContent={onSaveContent}
+              onResetContent={onResetContent}
             />
           )}
-        </>
-      ) : (
-        <div className="timeline__collapsed">
-          <div className="timeline__collapsed-info">
-            <span
-              className={`timeline__badge${
-                unlocking ? " timeline__badge--unlocking" : ""
-              }`}
-            >
-              <span className="lock-icon" aria-hidden />
-              ロック中
-            </span>
-            {distance !== null && (
-              <span className="timeline__distance">
-                現在地から {formatDistance(distance)}
-              </span>
-            )}
-            <span className="timeline__collapsed-note">
-              ミッションをクリアするとメッセージが開きます
-            </span>
-          </div>
-          <button
-            className="timeline__simulate"
-            onClick={() => onToggleManual(spot.id)}
-            type="button"
-          >
-            解放をシミュレート
-          </button>
-        </div>
-      )}
-    </li>
-  );
+    </>
+  ) : (
+    <div className="timeline__collapsed">
+      <div className="timeline__collapsed-info">
+        <span
+          className={`timeline__badge${
+            unlocking ? " timeline__badge--unlocking" : ""
+          }`}
+        >
+          <span className="lock-icon" aria-hidden />
+          ロック中
+        </span>
+        {distance !== null && (
+          <span className="timeline__distance">
+            現在地から {formatDistance(distance)}
+          </span>
+        )}
+        <span className="timeline__collapsed-note">
+          ミッションをクリアするとメッセージが開きます
+        </span>
+      </div>
+      <button
+        className="timeline__simulate"
+        type="button"
+        onClick={handleManualToggle}
+        onMouseDown={suppressPropagation}
+        onPointerDown={suppressPropagation}
+        onTouchStart={suppressPropagation}
+      >
+        解放をシミュレート
+      </button>
+    </div>
+  )}
+</li>
+ );
+}
+
+function buildPhotoDraft(
+  customEntries: CustomPhotoEntry[],
+  defaultPhotos: TripPhoto[],
+): PhotoDraft[] {
+  const drafts: PhotoDraft[] = [];
+  for (let index = 0; index < MAX_CUSTOM_PHOTOS; index += 1) {
+    const custom = customEntries[index];
+    if (custom && custom.src) {
+      drafts.push({
+        src: custom.src,
+        caption: custom.caption ?? "",
+      });
+      continue;
+    }
+    const fallback = defaultPhotos[index];
+    drafts.push({
+      src: fallback?.src ?? "",
+      caption: fallback?.caption ?? "",
+    });
+  }
+  return drafts;
 }
 
 interface SpotDetailProps {
@@ -902,6 +1224,12 @@ interface SpotDetailProps {
   arrivalAwarded: boolean;
   onMissionComplete: (mission: TripMission) => void;
   completedMissionIds: Set<string>;
+  defaultMessage: string;
+  defaultPhotos: TripPhoto[];
+  customMessage?: string;
+  customPhotos: CustomPhotoEntry[];
+  onSaveContent: (payload: SpotContentPayload) => void;
+  onResetContent: () => void;
 }
 
 function SpotDetail({
@@ -912,6 +1240,12 @@ function SpotDetail({
   arrivalAwarded,
   onMissionComplete,
   completedMissionIds,
+  defaultMessage,
+  defaultPhotos,
+  customMessage,
+  customPhotos,
+  onSaveContent,
+  onResetContent,
 }: SpotDetailProps) {
   const badgeClass = `spot-detail__badge${
     unlocking ? " spot-detail__badge--unlocking" : ""
@@ -920,11 +1254,72 @@ function SpotDetail({
     spot.missions.length === 0 ||
     spot.missions.every((mission) => completedMissionIds.has(mission.id));
   const canReveal = unlocked && allMissionsComplete;
+  const [isEditing, setIsEditing] = useState(false);
+  const [draftMessage, setDraftMessage] = useState<string>(
+    customMessage ?? "",
+  );
+  const [draftPhotos, setDraftPhotos] = useState<PhotoDraft[]>(() =>
+    buildPhotoDraft(customPhotos, defaultPhotos),
+  );
+  const suppressPropagation = useCallback(suppressEventPropagation, []);
+
+  useEffect(() => {
+    if (!isEditing) {
+      setDraftMessage(customMessage ?? "");
+      setDraftPhotos(buildPhotoDraft(customPhotos, defaultPhotos));
+    }
+  }, [customMessage, customPhotos, defaultPhotos, isEditing, spot.id]);
+
+  const handleEditorOpen = useCallback(() => {
+    setIsEditing(true);
+    setDraftMessage(customMessage ?? "");
+    setDraftPhotos(buildPhotoDraft(customPhotos, defaultPhotos));
+  }, [customMessage, customPhotos, defaultPhotos]);
+
+  const handleEditorCancel = useCallback(() => {
+    setIsEditing(false);
+    setDraftMessage(customMessage ?? "");
+    setDraftPhotos(buildPhotoDraft(customPhotos, defaultPhotos));
+  }, [customMessage, customPhotos, defaultPhotos]);
+
+  const handleEditorReset = useCallback(() => {
+    onResetContent();
+    setIsEditing(false);
+    setDraftMessage("");
+    setDraftPhotos(buildPhotoDraft([], defaultPhotos));
+  }, [defaultPhotos, onResetContent]);
+
+  const handleEditorSubmit = useCallback(
+    (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      const trimmed = draftMessage.trim();
+      const cleanedPhotos = draftPhotos
+        .map(({ src, caption }) => {
+          const photoSrc = src.trim();
+          const photoCaption = caption.trim();
+          if (!photoSrc) {
+            return null;
+          }
+          return photoCaption ? { src: photoSrc, caption: photoCaption } : { src: photoSrc };
+        })
+        .filter((entry): entry is CustomPhotoEntry => Boolean(entry))
+        .slice(0, MAX_CUSTOM_PHOTOS);
+      onSaveContent({ message: trimmed, photos: cleanedPhotos });
+      setIsEditing(false);
+    },
+    [draftMessage, draftPhotos, onSaveContent],
+  );
+
+  const inCustomState =
+    !!customMessage?.trim() || customPhotos.length > 0;
 
   return (
     <article
       className={`spot-detail${unlocked ? " spot-detail--unlocked" : ""}`}
       aria-live="polite"
+      onMouseDown={suppressPropagation}
+      onPointerDown={suppressPropagation}
+      onTouchStart={suppressPropagation}
     >
       <div className="spot-detail__header">
         <div>
@@ -978,6 +1373,9 @@ function SpotDetail({
                       <button
                         className="spot-missions__action"
                         onClick={() => onMissionComplete(mission)}
+                        onMouseDown={suppressPropagation}
+                        onPointerDown={suppressPropagation}
+                        onTouchStart={suppressPropagation}
                         disabled={completed}
                       >
                         {completed
@@ -997,9 +1395,111 @@ function SpotDetail({
                 <p>{spot.memory.body}</p>
               </div>
               <div className="spot-detail__message">
-                <h4>手紙メッセージ</h4>
+                <div className="spot-detail__message-header">
+                  <h4>手紙メッセージ</h4>
+                  <button
+                    type="button"
+                    className="spot-detail__edit-button"
+                    onClick={isEditing ? handleEditorCancel : handleEditorOpen}
+                    aria-expanded={isEditing}
+                  >
+                    {isEditing ? "編集を閉じる" : "カスタマイズ"}
+                  </button>
+                </div>
+                {inCustomState && !isEditing && (
+                  <p className="spot-detail__message-hint">
+                    カスタム入力が適用されています
+                  </p>
+                )}
                 <p>{spot.memory.message}</p>
               </div>
+              {isEditing && (
+                <form
+                  className="spot-detail__editor"
+                  onSubmit={handleEditorSubmit}
+                >
+                  <label className="spot-detail__editor-field">
+                    <span>メッセージ</span>
+                    <textarea
+                      value={draftMessage}
+                      onChange={(event) => setDraftMessage(event.target.value)}
+                      placeholder={defaultMessage}
+                      rows={4}
+                    />
+                  </label>
+                  <div className="spot-detail__editor-photos">
+                    {draftPhotos.map((draft, index) => (
+                      <div
+                        key={`photo-input-${index}`}
+                        className="spot-detail__editor-photo-group"
+                      >
+                        <label className="spot-detail__editor-field">
+                          <span>写真 {index + 1} のURL</span>
+                          <input
+                            type="url"
+                            value={draft.src}
+                            onChange={(event) => {
+                              setDraftPhotos((prev) => {
+                                const next = [...prev];
+                                next[index] = {
+                                  ...next[index],
+                                  src: event.target.value,
+                                };
+                                return next;
+                              });
+                            }}
+                            placeholder={
+                              defaultPhotos[index]?.src ?? "/memories/..."
+                            }
+                            inputMode="url"
+                            pattern="https?://.*|/.*"
+                          />
+                        </label>
+                        <label className="spot-detail__editor-field spot-detail__editor-caption">
+                          <span>キャプション</span>
+                          <input
+                            type="text"
+                            value={draft.caption}
+                            onChange={(event) => {
+                              setDraftPhotos((prev) => {
+                                const next = [...prev];
+                                next[index] = {
+                                  ...next[index],
+                                  caption: event.target.value,
+                                };
+                                return next;
+                              });
+                            }}
+                            placeholder={
+                              defaultPhotos[index]?.caption ??
+                              "（空欄で非表示）"
+                            }
+                          />
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="spot-detail__editor-actions">
+                    <button type="submit" className="spot-detail__editor-save">
+                      保存する
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleEditorCancel}
+                      className="spot-detail__editor-cancel"
+                    >
+                      キャンセル
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleEditorReset}
+                      className="spot-detail__editor-reset"
+                    >
+                      デフォルトに戻す
+                    </button>
+                  </div>
+                </form>
+              )}
               <MemoryGallery photos={spot.photos} />
             </>
           ) : (

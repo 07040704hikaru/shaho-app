@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 520">
+  <rect width="420" height="520" fill="#f0f3ff" />
+  <g transform="rotate(5 210 260)">
+    <rect x="80" y="80" width="260" height="360" rx="24" fill="#ffffff" />
+    <rect
+      x="100"
+      y="120"
+      width="220"
+      height="220"
+      rx="18"
+      fill="#e1e8ff"
+    />
+    <rect
+      x="120"
+      y="160"
+      width="70"
+      height="90"
+      rx="12"
+      fill="#ffffff"
+      stroke="#7c8fff"
+    />
+    <rect
+      x="230"
+      y="160"
+      width="70"
+      height="90"
+      rx="12"
+      fill="#ffffff"
+      stroke="#7c8fff"
+    />
+    <rect x="165" y="310" width="90" height="28" rx="12" fill="#bfc8ff" />
+    <circle cx="210" cy="210" r="24" fill="#7c8fff" opacity="0.4" />
+    <path
+      d="M180 245 Q210 280 240 245"
+      stroke="#7c8fff"
+      stroke-width="8"
+      stroke-linecap="round"
+      fill="none"
+    />
+  </g>
+  <text
+    x="210"
+    y="430"
+    font-family="'Inter', 'Noto Sans JP', sans-serif"
+    font-size="20"
+    text-anchor="middle"
+    fill="#4c5aa0"
+  >
+    旅ノートに最初の言葉を
+  </text>
+</svg>
