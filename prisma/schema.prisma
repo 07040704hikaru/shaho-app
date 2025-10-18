@@ -2,15 +2,38 @@ generator client {
   provider = "prisma-client-js"
 }
 
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "ERD.svg"
+  includeRelationFromFields = true
+}
+
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
   directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
+// --- 新規: ユーザー ---
+model User {
+  id          String       @id @default(cuid())
+  email       String       @unique
+  displayName String
+  avatarUrl   String?
+  // 作成したトリップ（オーナー）
+  ownedTrips  Trip[]       @relation("TripOwner")
+  // 参加しているトリップ（メンバー）
+  trips       TripMember[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([email])
+}
+
+// --- 変更: Trip ---
 model Trip {
-  id            String   @id @default(cuid())
-  slug          String   @unique
+  id            String  @id @default(cuid())
+  slug          String  @unique
   title         String
   subtitle      String
   dedication    String
@@ -20,16 +43,63 @@ model Trip {
   giver         String
   receiver      String
   soundtrackUrl String?
-  spots         Spot[]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+
+  // ①: 作成者（オーナー）
+  ownerId String
+  owner   User   @relation("TripOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  // ④: 共有（メンバー）
+  members TripMember[]
+
+  // ②/③: 中身
+  spots     Spot[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 招待リンク用（任意）：公開設定や招待トークン
+  isInviteOnly Boolean @default(true)
+  inviteCode   String? @unique
 }
 
+// --- 新規: TripMember（ユーザーとトリップの多対多 & 権限） ---
+model TripMember {
+  id     String   @id @default(cuid())
+  tripId String
+  userId String
+  role   TripRole @default(VIEWER) // OWNER/EDITOR/VIEWER
+
+  trip Trip @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // 招待状態（承認待ちなど）
+  inviteStatus InviteStatus @default(ACCEPTED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tripId, userId]) // 同じユーザーを同じトリップに重複参加させない
+  @@index([userId])
+  @@index([tripId])
+}
+
+enum TripRole {
+  OWNER
+  EDITOR
+  VIEWER
+}
+
+enum InviteStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+// --- 変更: Spot（しおり強化 & カスタム性） ---
 model Spot {
-  id                 String   @id @default(cuid())
+  id                 String @id @default(cuid())
   tripId             String
-  trip               Trip     @relation(fields: [tripId], references: [id], onDelete: Cascade)
-  orderIndex         Int
+  trip               Trip   @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  orderIndex         Int // 並び順（DnDで編集）
   name               String
   dayLabel           String
   dateLabel          String
@@ -42,41 +112,76 @@ model Spot {
   mapX               Float
   mapY               Float
   unlockRadiusMeters Int
-  arrivalPoints      Int      @default(0)
-  headline           String
-  memoryBody         String
-  prompt             String?
-  message            String
-  photos             Photo[]
-  missions           Mission[]
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
-}
+  arrivalPoints      Int    @default(0)
 
-model Photo {
-  id        String   @id @default(cuid())
-  spotId    String
-  spot      Spot     @relation(fields: [spotId], references: [id], onDelete: Cascade)
-  orderIndex Int
-  imageUrl  String
-  alt       String
-  caption   String?
+  // ③ しおりとしての情報を増やす（任意で使えるようにオプショナルに）
+  iconUrl       String? // ② カスタムアイコン
+  websiteUrl    String?
+  phone         String?
+  budget        String? // 例: "¥2,000-¥3,000"
+  openingHours  String? // 営業時間テキスト
+  transportNote String? // アクセス（地下鉄・徒歩など）
+  tags          String[] @default([]) // Postgresなら text[] 対応
+
+  // 既存の「思い出・メッセージ系」
+  headline   String
+  memoryBody String
+  prompt     String?
+  message    String
+
+  // 画像 & ミッション
+  photos   Photo[]
+  missions Mission[]
+
+  // 編集者・監査を入れたい場合は下記（今回は最小化）
+  // lastEditedById   String?
+  // lastEditedBy     User?     @relation(fields: [lastEditedById], references: [id])
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([tripId])
+  @@index([orderIndex])
 }
 
+// --- 変更: Photo（名前をUI寄りに） ---
+model Photo {
+  id         String   @id @default(cuid())
+  spotId     String
+  spot       Spot     @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  orderIndex Int
+  imageUrl   String
+  alt        String
+  caption    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([spotId])
+  @@index([orderIndex])
+}
+
+// --- 変更: Mission（チェックリスト用フィールド強化） ---
 model Mission {
-  id           String       @id @default(cuid())
+  id           String      @id @default(cuid())
   spotId       String
-  spot         Spot         @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  spot         Spot        @relation(fields: [spotId], references: [id], onDelete: Cascade)
   title        String
   type         MissionType
   description  String
-  rewardPoints Int          @default(50)
-  photoPrompt  String?
+  rewardPoints Int         @default(50)
+
+  // ② カスタム性の助け：写真生成prmptやチェックラベル等
+  photoPrompt    String?
   checklistLabel String?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+
+  // 追加オプション：チェックリスト複数項目や外部リンクにも拡張可
+  // checklistItems String[] @default([])
+  // linkUrl        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([spotId])
 }
 
 enum MissionType {
