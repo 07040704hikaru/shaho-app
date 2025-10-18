@@ -84,3 +84,4 @@ enum MissionType {
   CHECKIN
   QUEST
 }
+
