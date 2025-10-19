@@ -1,4 +1,5 @@
 import { MissionType, PrismaClient } from "@prisma/client";
+import { hashPassword } from "../src/lib/auth/password";
 
 const prisma = new PrismaClient();
 
@@ -7,9 +8,20 @@ async function main() {
   await prisma.photo.deleteMany();
   await prisma.spot.deleteMany();
   await prisma.trip.deleteMany();
+  const seedPasswordHash = await hashPassword("password123");
+
+  // Ensure there is a seed owner for trips
+  const owner = await prisma.user.create({
+    data: {
+      email: `seed+owner@example.local`,
+      displayName: "Seed Owner",
+      passwordHash: seedPasswordHash,
+    },
+  });
 
   await prisma.trip.create({
     data: {
+      owner: { connect: { id: owner.id } },
       slug: "osaka-birthday-adventure",
       title: "Osaka Birthday Adventure",
       subtitle: "USJ・万博でワクワクを巡る3日間",

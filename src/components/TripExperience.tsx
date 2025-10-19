@@ -28,6 +28,7 @@ import {
   type PointerEvent,
   type SyntheticEvent,
 } from "react";
+import Image from "next/image";
 import { TripMission, TripPhoto, TripPlan, TripSpot } from "@/data/tripPlan";
 import { TripMap } from "@/components/TripMap";
 import { MemoryGallery } from "@/components/MemoryGallery";
@@ -788,10 +789,13 @@ function TripExperienceInner({ plan }: { plan: TripPlan }) {
           </div>
         </div>
         <div className="hero__art">
-          <img
+          <Image
             src={plan.heroImage}
             alt="Trip mood illustration"
             className="hero__image"
+            width={960}
+            height={540}
+            priority
           />
         </div>
       </section>

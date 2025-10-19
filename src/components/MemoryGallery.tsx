@@ -1,7 +1,8 @@
 "use client";
 
+import Image from "next/image";
+import { useState } from "react";
 import { TripPhoto } from "@/data/tripPlan";
-import type { SyntheticEvent } from "react";
 
 interface MemoryGalleryProps {
   photos: TripPhoto[];
@@ -10,17 +11,9 @@ interface MemoryGalleryProps {
 const FALLBACK_IMAGE_SRC = "/memories/cover.svg";
 const FALLBACK_ALT = "思い出写真が読み込めませんでした";
 
-function handleImageError(event: SyntheticEvent<HTMLImageElement>) {
-  const target = event.currentTarget;
-  if (target.dataset.fallbackApplied === "true") {
-    return;
-  }
-  target.dataset.fallbackApplied = "true";
-  target.src = FALLBACK_IMAGE_SRC;
-  target.alt = FALLBACK_ALT;
-}
-
 export function MemoryGallery({ photos }: MemoryGalleryProps) {
+  const [fallbackMap, setFallbackMap] = useState<Record<string, boolean>>({});
+
   if (!photos.length) {
     return null;
   }
@@ -30,12 +23,19 @@ export function MemoryGallery({ photos }: MemoryGalleryProps) {
       {photos.map((photo) => (
         <figure key={photo.id} className="memory-gallery__item">
           <div className="memory-gallery__frame">
-            <img
-              src={photo.src}
-              alt={photo.alt}
+            <Image
+              src={fallbackMap[photo.id] ? FALLBACK_IMAGE_SRC : photo.src}
+              alt={fallbackMap[photo.id] ? FALLBACK_ALT : photo.alt}
+              width={640}
+              height={480}
               loading="lazy"
               className="memory-gallery__image"
-              onError={handleImageError}
+              onError={() =>
+                setFallbackMap((prev) =>
+                  prev[photo.id] ? prev : { ...prev, [photo.id]: true },
+                )
+              }
+              sizes="(max-width: 768px) 100vw, 33vw"
             />
           </div>
           {photo.caption && (

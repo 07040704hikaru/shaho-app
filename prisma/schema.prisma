@@ -3,8 +3,8 @@ generator client {
 }
 
 generator erd {
-  provider = "prisma-erd-generator"
-  output   = "ERD.svg"
+  provider                  = "prisma-erd-generator"
+  output                    = "ERD.svg"
   includeRelationFromFields = true
 }
 
@@ -16,16 +16,17 @@ datasource db {
 
 // --- 新規: ユーザー ---
 model User {
-  id          String       @id @default(cuid())
-  email       String       @unique
-  displayName String
-  avatarUrl   String?
+  id           String       @id @default(cuid())
+  email        String       @unique
+  displayName  String
+  avatarUrl    String?
+  passwordHash String
   // 作成したトリップ（オーナー）
-  ownedTrips  Trip[]       @relation("TripOwner")
+  ownedTrips   Trip[]       @relation("TripOwner")
   // 参加しているトリップ（メンバー）
-  trips       TripMember[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  trips        TripMember[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
   @@index([email])
 }
@@ -189,4 +190,3 @@ enum MissionType {
   CHECKIN
   QUEST
 }
-

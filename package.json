@@ -18,6 +18,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@prisma/client": "^5.22.0",
     "@swc/helpers": "^0.5.17",
+    "axios": "^1.7.7",
     "date-fns": "^3.3.1",
     "leaflet": "^1.9.4",
     "nanoid": "^4.0.2",

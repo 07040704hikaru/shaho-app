@@ -23,7 +23,8 @@
       "@/app/*": ["src/app/*"],
       "@/components/*": ["src/components/*"],
       "@/data/*": ["src/data/*"],
-      "@/lib/*": ["src/lib/*"]
+      "@/lib/*": ["src/lib/*"],
+      "@/server/*": ["src/server/*"]
     },
     "plugins": [
       {
