@@ -1,7 +1,5 @@
 import { createHmac, randomBytes } from "node:crypto";
 
-export const AUTH_TOKEN_STORAGE_KEY = "authToken";
-
 const TOKEN_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7 days
 
 type TokenPayload = {

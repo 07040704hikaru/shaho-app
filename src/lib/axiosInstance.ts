@@ -1,7 +1,7 @@
 "use client";
 
 import axios from "axios";
-import { AUTH_TOKEN_STORAGE_KEY } from "@/lib/auth/token";
+import { AUTH_TOKEN_STORAGE_KEY } from "@/lib/auth/constants";
 
 const api = axios.create();
 

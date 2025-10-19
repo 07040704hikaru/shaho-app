@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AUTH_TOKEN_STORAGE_KEY } from "@/lib/auth/token";
+import { AUTH_TOKEN_STORAGE_KEY } from "@/lib/auth/constants";
 
 export function useAuthGuard() {
   const router = useRouter();

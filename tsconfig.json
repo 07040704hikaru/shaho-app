@@ -24,6 +24,8 @@
       "@/components/*": ["src/components/*"],
       "@/data/*": ["src/data/*"],
       "@/lib/*": ["src/lib/*"],
+      "@/context/*": ["src/context/*"],
+      "@/hooks/*": ["src/hooks/*"],
       "@/server/*": ["src/server/*"]
     },
     "plugins": [

@@ -19,11 +19,16 @@ export async function POST(req: Request) {
 
     const normalizedEmail = email.trim().toLowerCase();
     const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
-    if (!user || !user.passwordHash) {
+    if (!user) {
       return NextResponse.json({ message: "メールアドレスまたはパスワードが正しくありません。" }, { status: 401 });
     }
 
-    const isValid = await verifyPassword(password, user.passwordHash);
+    const passwordHash = (user as any)?.passwordHash as string | null | undefined;
+    if (!passwordHash) {
+      return NextResponse.json({ message: "メールアドレスまたはパスワードが正しくありません。" }, { status: 401 });
+    }
+
+    const isValid = await verifyPassword(password, passwordHash);
     if (!isValid) {
       return NextResponse.json({ message: "メールアドレスまたはパスワードが正しくありません。" }, { status: 401 });
     }

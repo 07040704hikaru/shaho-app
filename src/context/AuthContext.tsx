@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { AUTH_TOKEN_STORAGE_KEY } from "@/lib/auth/token";
+import { AUTH_TOKEN_STORAGE_KEY } from "@/lib/auth/constants";
 
 type AuthContextValue = {
   token: string | null;
