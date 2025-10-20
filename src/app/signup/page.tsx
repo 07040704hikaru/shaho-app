@@ -5,10 +5,11 @@ import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
-export default function LoginPage() {
-  const { login, token } = useAuth();
+export default function SignupPage() {
   const router = useRouter();
+  const { login, token } = useAuth();
   const [email, setEmail] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -25,20 +26,19 @@ export default function LoginPage() {
     setError(null);
 
     try {
-      const res = await fetch("/api/login", {
+      const res = await fetch("/api/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, displayName, password }),
       });
 
-      if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as { message?: string } | null;
-        setError(body?.message ?? "メールアドレスまたはパスワードが正しくありません。");
+      const body = (await res.json().catch(() => null)) as { token?: string; message?: string } | null;
+      if (!res.ok || !body?.token) {
+        setError(body?.message ?? "登録に失敗しました。入力内容をご確認ください。");
         return;
       }
 
-      const { token: accessToken } = (await res.json()) as { token: string };
-      login(accessToken);
+      login(body.token);
       router.push("/trips");
     } catch {
       setError("サーバーに接続できませんでした。しばらくしてから再度お試しください。");
@@ -49,61 +49,74 @@ export default function LoginPage() {
 
   return (
     <main className="relative min-h-screen bg-gradient-to-br from-surface-subtle via-white to-surface-subtle">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(86,111,255,0.12),transparent_55%),radial-gradient(circle_at_80%_10%,rgba(86,111,255,0.08),transparent_50%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_15%,rgba(86,111,255,0.14),transparent_55%),radial-gradient(circle_at_80%_20%,rgba(86,111,255,0.08),transparent_50%)]" />
 
       <div className="relative mx-auto flex min-h-screen max-w-6xl flex-col gap-12 px-6 py-16 lg:flex-row lg:items-center lg:justify-between lg:px-12">
         <section className="mx-auto max-w-xl space-y-6 text-center lg:text-left">
           <span className="inline-flex items-center rounded-full border border-brand/20 bg-white px-4 py-1 text-sm font-medium text-brand shadow-sm">
-            Welcome back
+            Start your journey
           </span>
           <h1 className="text-4xl font-bold tracking-tight text-text-primary sm:text-5xl">
-            あなたの旅のしおりに再びアクセス
+            新しい冒険のためのアカウントを作成
           </h1>
           <p className="text-lg text-text-secondary">
-            ログインして旅の計画を開き、思い出を追加しましょう。
-            トークンベースの認証で安全に管理されています。
+            仲間と旅のプランを共有したり、スポットの思い出を追加したり。
+            今すぐ無料でアカウントを作成して旅を始めましょう。
           </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-4 lg:justify-start">
-            <FeatureBadge icon="🔐" title="セキュアなアクセス" description="JWT + localStorage のハイブリッド認証" />
-            <FeatureBadge icon="📸" title="旅の思い出管理" description="カスタムメッセージや写真を保存できます" />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FeatureCard
+              title="共同編集"
+              description="スポット情報やメッセージを複数メンバーで編集できます。"
+              icon="🤝"
+            />
+            <FeatureCard
+              title="カスタム思い出"
+              description="写真・メッセージをスポットごとに保存し、旅を豊かに。"
+              icon="📝"
+            />
           </div>
         </section>
 
         <section className="mx-auto w-full max-w-md rounded-3xl bg-white/90 p-8 shadow-soft backdrop-blur">
           <div className="mb-6 space-y-2 text-center">
-            <h2 className="text-2xl font-semibold text-text-primary">ログイン</h2>
+            <h2 className="text-2xl font-semibold text-text-primary">アカウント作成</h2>
             <p className="text-sm leading-relaxed text-text-muted">
-              デモ用アカウント:
-              <code className="mx-1 rounded-md bg-brand/10 px-2 py-1 text-xs font-semibold text-brand">
-                seed+owner@example.local
-              </code>
-              /
-              <code className="mx-1 rounded-md bg-brand/10 px-2 py-1 text-xs font-semibold text-brand">
-                password123
-              </code>
+              メールアドレスと 8 文字以上のパスワードをご用意ください。表示名はいつでも変更できます。
             </p>
           </div>
 
           <form className="space-y-5" onSubmit={handleSubmit}>
             <FormField
-              id="email"
+              id="signup-email"
               label="メールアドレス"
               type="email"
-              autoComplete="email"
               value={email}
               onChange={setEmail}
               placeholder="you@example.com"
+              autoComplete="email"
+              required
             />
 
             <FormField
-              id="password"
+              id="signup-displayName"
+              label="表示名（任意）"
+              type="text"
+              value={displayName}
+              onChange={setDisplayName}
+              placeholder="旅のナビゲーター"
+            />
+
+            <FormField
+              id="signup-password"
               label="パスワード"
               type="password"
-              autoComplete="current-password"
               value={password}
               onChange={setPassword}
-              placeholder="••••••••"
+              placeholder="8文字以上で入力"
+              autoComplete="new-password"
+              required
+              minLength={8}
             />
 
             {error ? (
@@ -120,18 +133,18 @@ export default function LoginPage() {
               {isSubmitting ? (
                 <>
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-                  ログイン中...
+                  登録中...
                 </>
               ) : (
-                "ログイン"
+                "アカウントを作成"
               )}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-text-muted">
-            アカウントをお持ちでない場合は{" "}
-            <Link className="font-semibold text-brand hover:underline" href="/signup">
-              新規登録
+            既にアカウントをお持ちの方は{" "}
+            <Link className="font-semibold text-brand hover:underline" href="/login">
+              ログイン
             </Link>
             へ
           </p>
@@ -141,7 +154,7 @@ export default function LoginPage() {
   );
 }
 
-function FeatureBadge({
+function FeatureCard({
   icon,
   title,
   description,
@@ -151,11 +164,11 @@ function FeatureBadge({
   description: string;
 }) {
   return (
-    <div className="flex max-w-xs items-center gap-3 rounded-2xl bg-white/70 px-4 py-3 shadow-soft backdrop-blur">
-      <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-brand/10 text-lg">
+    <div className="flex items-start gap-3 rounded-2xl bg-white/80 px-5 py-4 shadow-soft backdrop-blur">
+      <span className="mt-1 inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-brand/10 text-lg">
         {icon}
       </span>
-      <div className="text-left text-sm text-text-secondary">
+      <div className="space-y-1 text-left text-sm text-text-secondary">
         <p className="font-semibold text-text-primary">{title}</p>
         <p>{description}</p>
       </div>
@@ -171,6 +184,8 @@ function FormField({
   onChange,
   placeholder,
   autoComplete,
+  required,
+  minLength,
 }: {
   id: string;
   label: string;
@@ -179,6 +194,8 @@ function FormField({
   onChange: (value: string) => void;
   placeholder?: string;
   autoComplete?: string;
+  required?: boolean;
+  minLength?: number;
 }) {
   return (
     <div className="space-y-2">
@@ -192,7 +209,8 @@ function FormField({
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
         autoComplete={autoComplete}
-        required
+        required={required}
+        minLength={minLength}
         className="w-full rounded-2xl border border-transparent bg-surface-subtle px-4 py-3 text-base text-text-primary shadow-inner outline-none transition focus:border-brand focus:bg-white focus:shadow-soft focus:ring-2 focus:ring-brand/40"
       />
     </div>

@@ -8,6 +8,7 @@ async function main() {
   await prisma.photo.deleteMany();
   await prisma.spot.deleteMany();
   await prisma.trip.deleteMany();
+  await prisma.user.deleteMany();
   const seedPasswordHash = await hashPassword("password123");
 
   // Ensure there is a seed owner for trips
