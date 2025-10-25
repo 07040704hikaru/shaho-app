@@ -46,25 +46,38 @@ export function TripList({ trips, onCreate }: TripListProps) {
     <>
       <section className="trip-list">
         <div className="trip-list__header">
-          <h1 className="trip-list__title">トリップ一覧</h1>
-          <button
-            type="button"
-            onClick={() => setIsCreateModalOpen(true)}
-            className="trip-list__create-button"
-          >
-            トリップを作成
-          </button>
-          <LogoutButton />
+          <div className="trip-list__heading">
+            <h1 className="trip-list__title">トリップ一覧</h1>
+            <p className="trip-list__subtitle">
+              作成済みのしおりを開くか、新しい旅の計画を追加しましょう。
+            </p>
+          </div>
+          <div className="trip-list__header-actions">
+            <button
+              type="button"
+              onClick={() => setIsCreateModalOpen(true)}
+              className="trip-list__create-button"
+            >
+              トリップを作成
+            </button>
+            <LogoutButton />
+          </div>
         </div>
 
         {hasTrips ? (
-          <ul className="trip-list__items">
+          <ul className="trip-list__items" aria-live="polite">
             {trips.map((trip) => (
               <li key={trip.id} className="trip-list__item">
-                <Link href={`/trips/${trip.slug}`} className="trip-list__link">
+                <Link href={`/trips/${trip.slug}`} className="trip-list__card">
+                  <div className="trip-list__card-meta">
+                    <span className="trip-list__chip">旅のしおり</span>
+                    <span className="trip-list__item-dates">{trip.tripDates}</span>
+                  </div>
                   <h2 className="trip-list__item-title">{trip.title}</h2>
-                  <p className="trip-list__item-dates">{trip.tripDates}</p>
                   <p className="trip-list__item-location">{trip.baseLocation}</p>
+                  <span className="trip-list__card-arrow" aria-hidden>
+                    →
+                  </span>
                 </Link>
               </li>
             ))}
@@ -80,9 +93,9 @@ export function TripList({ trips, onCreate }: TripListProps) {
         <div className="trip-create-modal">
           <div className="trip-create-modal__content">
             <h2>新規トリップを作成</h2>
-            <form onSubmit={handleSubmit}>
-              <label>
-                タイトル:
+            <form onSubmit={handleSubmit} className="trip-create-modal__form">
+              <label className="trip-create-modal__field">
+                <span>タイトル</span>
                 <input
                   type="text"
                   name="title"
@@ -93,8 +106,8 @@ export function TripList({ trips, onCreate }: TripListProps) {
                   required
                 />
               </label>
-              <label>
-                スラッグ:
+              <label className="trip-create-modal__field">
+                <span>スラッグ（URL）</span>
                 <input
                   type="text"
                   name="slug"
@@ -104,8 +117,8 @@ export function TripList({ trips, onCreate }: TripListProps) {
                   }
                 />
               </label>
-              <label>
-                日程:
+              <label className="trip-create-modal__field">
+                <span>日程</span>
                 <input
                   type="text"
                   name="tripDates"
@@ -115,8 +128,8 @@ export function TripList({ trips, onCreate }: TripListProps) {
                   }
                 />
               </label>
-              <label>
-                出発地:
+              <label className="trip-create-modal__field">
+                <span>出発地</span>
                 <input
                   type="text"
                   name="baseLocation"
@@ -131,11 +144,12 @@ export function TripList({ trips, onCreate }: TripListProps) {
               </label>
               {errorMessage ? <p className="trip-create-modal__error">{errorMessage}</p> : null}
               <div className="trip-create-modal__actions">
-                <button type="submit" disabled={isSubmitting}>
+                <button type="submit" className="trip-create-modal__primary" disabled={isSubmitting}>
                   {isSubmitting ? "作成中..." : "作成"}
                 </button>
                 <button
                   type="button"
+                  className="trip-create-modal__secondary"
                   onClick={() => setIsCreateModalOpen(false)}
                   disabled={isSubmitting}
                 >
