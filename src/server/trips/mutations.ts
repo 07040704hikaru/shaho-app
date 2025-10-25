@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { Prisma } from "@prisma/client";
+import type { TripListItem } from "@/server/trips/queries";
 
 export type TripDraft = {
   title: string;
@@ -29,7 +30,7 @@ async function ensureUniqueSlug(base: string): Promise<string> {
   return candidate;
 }
 
-export async function createTrip(userId: string, draft: TripDraft): Promise<void> {
+export async function createTrip(userId: string, draft: TripDraft): Promise<TripListItem> {
   if (!draft.title.trim()) {
     throw new Error("タイトルは必須です。");
   }
@@ -52,5 +53,14 @@ export async function createTrip(userId: string, draft: TripDraft): Promise<void
     owner: { connect: { id: userId } },
   };
 
-  await prisma.trip.create({ data });
+  return prisma.trip.create({
+    data,
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      tripDates: true,
+      baseLocation: true,
+    },
+  });
 }

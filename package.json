@@ -10,7 +10,7 @@
     "postinstall": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:generate": "prisma generate",
-    "db:seed": "ts-node --swc prisma/seed.ts"
+    "db:seed": "ts-node --swc --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

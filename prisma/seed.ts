@@ -1,5 +1,5 @@
 import { MissionType, PrismaClient } from "@prisma/client";
-import { hashPassword } from "../src/lib/auth/password.ts";
+import { hashPassword } from "../src/lib/auth/password";
 
 const prisma = new PrismaClient();
 

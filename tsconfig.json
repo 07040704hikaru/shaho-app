@@ -26,7 +26,8 @@
       "@/lib/*": ["src/lib/*"],
       "@/context/*": ["src/context/*"],
       "@/hooks/*": ["src/hooks/*"],
-      "@/server/*": ["src/server/*"]
+      "@/server/*": ["src/server/*"],
+      "@/types/*": ["src/types/*"]
     },
     "plugins": [
       {

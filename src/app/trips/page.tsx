@@ -1,12 +1,16 @@
 "use client";
 
-import { SetStateAction, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import api from "@/lib/axiosInstance";
 import { TripList } from "@/components/trips/TripList";
 import type { TripDraft } from "@/server/trips/mutations";
 import type { TripListItem } from "@/server/trips/queries";
-import { useAuthGuard } from "src/hooks/useAuthGuard";
-import { useAuth } from "src/context/AuthContext";
+import { useAuthGuard } from "@/hooks/useAuthGuard";
+import { useAuth } from "@/context/AuthContext";
+
+interface TripsResponse {
+  trips: TripListItem[];
+}
 
 export default function TripsPage() {
   const allowed = useAuthGuard();
@@ -26,7 +30,7 @@ export default function TripsPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await api.get<{ trips: TripListItem[] }>("/api/trips");
+        const response = await api.get<TripsResponse>("/api/trips");
         if (isMounted) {
           setTrips(response.data.trips);
         }
@@ -55,7 +59,7 @@ export default function TripsPage() {
 
   async function handleCreateTrip(draft: TripDraft) {
     await api.post("/api/trips", draft);
-    const response = await api.get<{ trips: TripListItem[] }>("/api/trips");
+    const response = await api.get<TripsResponse>("/api/trips");
     setTrips(response.data.trips);
   }
 
@@ -71,8 +75,8 @@ export default function TripsPage() {
           type="button"
           onClick={() =>
             api
-              .get<{ trips: TripListItem[] }>("/api/trips")
-              .then((response: { data: { trips: SetStateAction<{ id: string; slug: string; title: string; tripDates: string; baseLocation: string; }[]>; }; }) => {
+              .get<TripsResponse>("/api/trips")
+              .then((response) => {
                 setTrips(response.data.trips);
                 setError(null);
               })

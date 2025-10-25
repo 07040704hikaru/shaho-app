@@ -29,10 +29,15 @@ import {
   type SyntheticEvent,
 } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { TripMission, TripPhoto, TripPlan, TripSpot } from "@/data/tripPlan";
 import { TripMap } from "@/components/TripMap";
 import { MemoryGallery } from "@/components/MemoryGallery";
 import { resolveSpotIcon, resolveSpotMemoryPhoto } from "@/data/spotIcons";
+import { SpotForm, SpotFormValues } from "@/components/spots/SpotForm";
+import api from "@/lib/axiosInstance";
+import { SpotDTO } from "@/types/spot";
+import { useAuth } from "@/context/AuthContext";
 
 const MAX_CUSTOM_PHOTOS = 3;
 type CustomPhotoEntry = { src: string; caption?: string };
@@ -73,6 +78,15 @@ function TripExperienceInner({ plan }: { plan: TripPlan }) {
   const alphabeticalSpots = useMemo(() => {
     return [...rawSpots].sort((a, b) => a.name.localeCompare(b.name));
   }, [rawSpots]);
+
+  const router = useRouter();
+  const { token } = useAuth();
+  const [isManagingSpots, setIsManagingSpots] = useState(false);
+  const [manageSpots, setManageSpots] = useState<SpotDTO[]>([]);
+  const [isManageLoading, setIsManageLoading] = useState(false);
+  const [manageError, setManageError] = useState<string | null>(null);
+  const [editingManageSpot, setEditingManageSpot] = useState<SpotDTO | null>(null);
+  const [isManageFormOpen, setIsManageFormOpen] = useState(false);
 
   const [customOrder, setCustomOrder] = useState<string[]>([]);
   const [customLabels, setCustomLabels] = useState<Record<string, string>>({});
@@ -185,6 +199,108 @@ function TripExperienceInner({ plan }: { plan: TripPlan }) {
       return sum + arrival + missionPoints;
     }, 0);
   }, [rawSpots]);
+
+  const loadManageSpots = useCallback(async () => {
+    setIsManageLoading(true);
+    setManageError(null);
+    try {
+      const response = await api.get<{ spots: SpotDTO[] }>(
+        `/api/trips/${plan.id}/spots`,
+      );
+      const sorted = [...response.data.spots].sort(
+        (a, b) => a.orderIndex - b.orderIndex,
+      );
+      setManageSpots(sorted);
+    } catch (error) {
+      console.error("Failed to load spots for management", error);
+      setManageError("スポットの取得に失敗しました。");
+    } finally {
+      setIsManageLoading(false);
+    }
+  }, [plan.id]);
+
+  useEffect(() => {
+    if (isManagingSpots) {
+      void loadManageSpots();
+    }
+  }, [isManagingSpots, loadManageSpots]);
+
+  const getFormValuesFromManagedSpot = useCallback((spot: SpotDTO): SpotFormValues => {
+    return {
+      name: spot.name,
+      description: spot.description ?? "",
+      location: spot.location,
+      date: spot.date ?? "",
+    };
+  }, []);
+
+  const handleOpenSpotManager = useCallback(() => {
+    setIsManagingSpots(true);
+    setIsManageFormOpen(false);
+    setEditingManageSpot(null);
+  }, []);
+
+  const handleCloseSpotManager = useCallback(() => {
+    setIsManagingSpots(false);
+    setIsManageFormOpen(false);
+    setEditingManageSpot(null);
+    setManageError(null);
+  }, []);
+
+  const handleCreateSpotStart = useCallback(() => {
+    setEditingManageSpot(null);
+    setIsManageFormOpen(true);
+  }, []);
+
+  const handleEditSpotStart = useCallback((spot: SpotDTO) => {
+    setEditingManageSpot(spot);
+    setIsManageFormOpen(true);
+  }, []);
+
+  const handleSubmitManageSpot = useCallback(
+    async (values: SpotFormValues) => {
+      try {
+        if (editingManageSpot) {
+          await api.patch(`/api/trips/${plan.id}/spots/${editingManageSpot.id}`, values);
+        } else {
+          await api.post(`/api/trips/${plan.id}/spots`, values);
+        }
+        await loadManageSpots();
+        setIsManageFormOpen(false);
+        setEditingManageSpot(null);
+        router.refresh();
+      } catch (error) {
+        console.error("Failed to create/update spot", error);
+        setManageError("スポットの保存に失敗しました。");
+      }
+    },
+    [editingManageSpot, loadManageSpots, plan.id, router],
+  );
+
+  const handleDeleteManageSpot = useCallback(
+    async (spotId: string) => {
+      const confirmed =
+        typeof window === "undefined"
+          ? true
+          : window.confirm("このスポットを削除しますか？元に戻すことはできません。");
+      if (!confirmed) {
+        return;
+      }
+      try {
+        await api.delete(`/api/trips/${plan.id}/spots/${spotId}`);
+        await loadManageSpots();
+        if (editingManageSpot?.id === spotId) {
+          setEditingManageSpot(null);
+          setIsManageFormOpen(false);
+        }
+        router.refresh();
+      } catch (error) {
+        console.error("Failed to delete spot", error);
+        setManageError("スポットの削除に失敗しました。");
+      }
+    },
+    [editingManageSpot?.id, loadManageSpots, plan.id, router],
+  );
 
   const allMissionIds = useMemo(() => {
     return rawSpots.flatMap((spot) =>
@@ -829,6 +945,18 @@ function TripExperienceInner({ plan }: { plan: TripPlan }) {
         </button>
       </div>
 
+      {token ? (
+        <div className="spot-admin__controls">
+          <button
+            type="button"
+            className="spot-admin__button"
+            onClick={handleOpenSpotManager}
+          >
+            スポット管理
+          </button>
+        </div>
+      ) : null}
+
       <section className="layout">
         {viewMode === "map" && (
           <div
@@ -961,6 +1089,101 @@ function TripExperienceInner({ plan }: { plan: TripPlan }) {
         )}
       </section>
 
+      {isManagingSpots ? (
+        <div className="spot-admin">
+          <div
+            className="spot-admin__backdrop"
+            onClick={handleCloseSpotManager}
+            role="presentation"
+          />
+          <aside className="spot-admin__panel" role="dialog" aria-modal="true">
+            <header className="spot-admin__header">
+              <h2 className="spot-admin__title">スポット管理</h2>
+              <button
+                type="button"
+                className="spot-admin__close"
+                onClick={handleCloseSpotManager}
+              >
+                閉じる
+              </button>
+            </header>
+
+            {manageError ? (
+              <div className="spot-admin__status spot-admin__status--error">
+                {manageError}
+              </div>
+            ) : null}
+            {isManageLoading ? (
+              <div className="spot-admin__status">読み込み中…</div>
+            ) : null}
+
+            <div className="spot-admin__actions">
+              <button
+                type="button"
+                className="spot-admin__subbutton"
+                onClick={handleCreateSpotStart}
+              >
+                新規スポットを追加
+              </button>
+            </div>
+
+            <ul className="spot-admin__list">
+              {manageSpots.map((spot) => (
+                <li key={spot.id} className="spot-admin__list-item">
+                  <h3>{spot.name}</h3>
+                  <div className="spot-admin__list-meta">
+                    <span>{spot.location}</span>
+                    <span>
+                      {spot.date
+                        ? new Date(spot.date).toLocaleString("ja-JP")
+                        : `${spot.dateLabel} ${spot.time}`}
+                    </span>
+                  </div>
+                  <p className="spot-admin__list-description">
+                    {spot.description || "説明はまだ登録されていません。"}
+                  </p>
+                  <div className="spot-admin__list-actions">
+                    <button
+                      type="button"
+                      className="spot-admin__edit"
+                      onClick={() => handleEditSpotStart(spot)}
+                    >
+                      編集
+                    </button>
+                    <button
+                      type="button"
+                      className="spot-admin__delete"
+                      onClick={() => void handleDeleteManageSpot(spot.id)}
+                    >
+                      削除
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            {isManageFormOpen ? (
+              <div className="spot-admin__form">
+                <SpotForm
+                  mode={editingManageSpot ? "edit" : "create"}
+                  spotId={editingManageSpot?.id}
+                  initialValues={
+                    editingManageSpot
+                      ? getFormValuesFromManagedSpot(editingManageSpot)
+                      : undefined
+                  }
+                  onSubmit={handleSubmitManageSpot}
+                  onCancel={() => {
+                    setIsManageFormOpen(false);
+                    setEditingManageSpot(null);
+                  }}
+                  submitLabel={editingManageSpot ? "変更を保存" : "スポットを追加"}
+                />
+              </div>
+            ) : null}
+          </aside>
+        </div>
+      ) : null}
     </div>
   );
 }

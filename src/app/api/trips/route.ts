@@ -44,14 +44,14 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { title, slug, tripDates, baseLocation } = body ?? {};
 
-    await createTrip(user.id, {
+    const trip = await createTrip(user.id, {
       title: String(title ?? "").trim(),
       slug: slug ? String(slug) : undefined,
       tripDates: String(tripDates ?? ""),
       baseLocation: String(baseLocation ?? ""),
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ trip });
   } catch (error) {
     console.error("POST /api/trips failed", error);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
